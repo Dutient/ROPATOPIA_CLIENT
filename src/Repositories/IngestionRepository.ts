@@ -1,16 +1,5 @@
 import { makeApiCall } from '../Helper/RepositoryHelper';
-
-// Types for ingestion responses
-export interface IngestionResponse {
-  embedding: number[];
-  success: boolean;
-  message?: string;
-}
-
-export interface IngestionError {
-  detail: string;
-  status_code: number;
-}
+import type { IngestionResponse } from '../Models/IngestionResponse';
 
 // Ingestion repository functions
 export class IngestionRepository {
@@ -50,22 +39,6 @@ export class IngestionRepository {
   }
 
   /**
-   * Upload and ingest multiple files
-   * @param files - Array of files to upload and ingest
-   * @returns Promise with array of ingestion results
-   */
-  static async ingestMultipleFiles(files: File[]): Promise<IngestionResponse[]> {
-    const results: IngestionResponse[] = [];
-    
-    for (const file of files) {
-      const result = await this.ingestFile(file);
-      results.push(result);
-    }
-    
-    return results;
-  }
-
-  /**
    * Check if a file type is supported for ingestion
    * @param file - The file to check
    * @returns boolean indicating if the file type is supported
@@ -78,14 +51,6 @@ export class IngestionRepository {
   }
 
   /**
-   * Get supported file types for ingestion
-   * @returns Array of supported file extensions
-   */
-  static getSupportedFileTypes(): string[] {
-    return ['.csv', '.xlsx', '.pdf'];
-  }
-
-  /**
    * Validate file size (optional helper method)
    * @param file - The file to validate
    * @param maxSizeMB - Maximum file size in MB (default: 50MB)
@@ -94,37 +59,5 @@ export class IngestionRepository {
   static validateFileSize(file: File, maxSizeMB: number = 50): boolean {
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
     return file.size <= maxSizeBytes;
-  }
-
-  /**
-   * Check the health status of the ingestion service
-   * @returns Promise with health status information
-   */
-  static async checkHealth(): Promise<any> {
-    try {
-      const response = await makeApiCall('/health', {
-        method: 'GET'
-      });
-      return await response.json();
-    } catch (error) {
-      console.error('Health check failed:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get information about the ROPA collection
-   * @returns Promise with collection information
-   */
-  static async getCollectionInfo(): Promise<any> {
-    try {
-      const response = await makeApiCall('/collection-info', {
-        method: 'GET'
-      });
-      return await response.json();
-    } catch (error) {
-      console.error('Failed to get collection info:', error);
-      throw error;
-    }
   }
 }

@@ -1,13 +1,9 @@
 import React, { useState, useRef } from 'react';
 import type { ChangeEvent } from 'react';
 import './Styles.css';
-
-interface FileInfo {
-  file: File;
-  id: string;
-  size: string;
-  type: string;
-}
+import type { FileInfo } from '../../Models/IFileInfo';
+import Breadcrumb from '../../Components/Breadcrumb';
+import { IngestionRepository } from '../../Repositories/IngestionRepository';
 
 const UploadPage: React.FC = () => {
   const [selectedFiles, setSelectedFiles] = useState<FileInfo[]>([]);
@@ -22,16 +18,35 @@ const UploadPage: React.FC = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const isValidFileType = (file: File) => {
+    const allowedTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/csv'
+    ];
+    const allowedExtensions = ['.pdf', '.xlsx', '.csv'];
+    const fileName = file.name.toLowerCase();
+    return (
+      allowedTypes.includes(file.type) ||
+      allowedExtensions.some(ext => fileName.endsWith(ext))
+    );
+  };
+
   const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (files) {
-      const newFiles: FileInfo[] = Array.from(files).map(file => ({
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (!isValidFileType(file)) {
+        alert('Only PDF, XLSX, and CSV files are allowed.');
+        return;
+      }
+      const newFile: FileInfo = {
         file,
         id: Math.random().toString(36).substr(2, 9),
         size: formatFileSize(file.size),
         type: file.type || 'Unknown'
-      }));
-      setSelectedFiles(prev => [...prev, ...newFiles]);
+      };
+      setSelectedFiles([newFile]);
     }
   };
 
@@ -50,14 +65,19 @@ const UploadPage: React.FC = () => {
     setIsDragOver(false);
     
     const files = event.dataTransfer.files;
-    if (files) {
-      const newFiles: FileInfo[] = Array.from(files).map(file => ({
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (!isValidFileType(file)) {
+        alert('Only PDF, XLSX, and CSV files are allowed.');
+        return;
+      }
+      const newFile: FileInfo = {
         file,
         id: Math.random().toString(36).substr(2, 9),
         size: formatFileSize(file.size),
         type: file.type || 'Unknown'
-      }));
-      setSelectedFiles(prev => [...prev, ...newFiles]);
+      };
+      setSelectedFiles([newFile]);
     }
   };
 
@@ -79,12 +99,25 @@ const UploadPage: React.FC = () => {
     console.log('Uploading files:', selectedFiles);
     alert(`Uploading ${selectedFiles.length} file(s)...`);
     
-    // For demo purposes, you can add your actual upload logic here
-    // Example: send files to your API endpoint
+    // Call IngestionRepository.ingestFile for each selected file
+    selectedFiles.forEach(async (fileInfo) => {
+      try {
+        const result = await IngestionRepository.ingestFile(fileInfo.file);
+        console.log('Ingestion result:', result);
+        // Optionally, show a success/failure message to the user
+      } catch (error) {
+        console.error('Ingestion error:', error);
+        // Optionally, show an error message to the user
+      }
+    });
   };
 
   return (
     <div className="upload-page">
+      <Breadcrumb paths={[
+        { name: 'Home', href: '/' },
+        { name: 'Upload', href: '/upload' }
+      ]} />
       <div className="upload-container">
         <h1 className="upload-title">File Upload</h1>
         
@@ -101,16 +134,15 @@ const UploadPage: React.FC = () => {
           <p className="upload-text">
             Drag and drop files here, or <span className="click-here">click to browse</span>
           </p>
-          <p className="upload-hint">Supports all file types</p>
+          <p className="upload-hint">Supports xlsx/csv/pdf files</p>
         </div>
 
         <input
           ref={fileInputRef}
           type="file"
-          multiple
           onChange={handleFileSelect}
           className="file-input"
-          accept="*/*"
+          accept=".pdf,.xlsx,.csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
         />
 
         {selectedFiles.length > 0 && (
