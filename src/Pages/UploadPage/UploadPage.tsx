@@ -6,8 +6,9 @@ import Breadcrumb from '../../Components/Breadcrumb';
 import { IngestionRepository } from '../../Repositories/IngestionRepository';
 
 const UploadPage: React.FC = () => {
-  const [selectedFiles, setSelectedFiles] = useState<FileInfo[]>([]);
+  const [selectedFile, setSelectedFile] = useState<FileInfo | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatFileSize = (bytes: number): string => {
@@ -46,7 +47,7 @@ const UploadPage: React.FC = () => {
         size: formatFileSize(file.size),
         type: file.type || 'Unknown'
       };
-      setSelectedFiles([newFile]);
+      setSelectedFile(newFile);
     }
   };
 
@@ -77,39 +78,38 @@ const UploadPage: React.FC = () => {
         size: formatFileSize(file.size),
         type: file.type || 'Unknown'
       };
-      setSelectedFiles([newFile]);
+      setSelectedFile(newFile);
     }
   };
 
-  const removeFile = (fileId: string) => {
-    setSelectedFiles(prev => prev.filter(file => file.id !== fileId));
+  const removeFile = () => {
+    setSelectedFile(null);
   };
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
 
-  const handleUpload = () => {
-    if (selectedFiles.length === 0) {
-      alert('Please select at least one file to upload.');
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      alert('Please select a file to upload.');
       return;
     }
     
-    // Here you would typically send the files to your backend
-    console.log('Uploading files:', selectedFiles);
-    alert(`Uploading ${selectedFiles.length} file(s)...`);
-    
-    // Call IngestionRepository.ingestFile for each selected file
-    selectedFiles.forEach(async (fileInfo) => {
-      try {
-        const result = await IngestionRepository.ingestFile(fileInfo.file);
-        console.log('Ingestion result:', result);
-        // Optionally, show a success/failure message to the user
-      } catch (error) {
-        console.error('Ingestion error:', error);
-        // Optionally, show an error message to the user
+    // Call IngestionRepository.ingestFile for the selected file
+    try {
+      const result = await IngestionRepository.ingestFile(selectedFile.file);
+      console.log('Ingestion result:', result);
+      if (result.success) {
+        setUploadSuccess(true);
+        alert('Upload successful!');
+      } else {
+        alert('Upload failed. Please try again.');
       }
-    });
+    } catch (error) {
+      console.error('Ingestion error:', error);
+      alert('Upload failed. Please try again.');
+    }
   };
 
   return (
@@ -145,47 +145,54 @@ const UploadPage: React.FC = () => {
           accept=".pdf,.xlsx,.csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
         />
 
-        {selectedFiles.length > 0 && (
+        {selectedFile && (
           <div className="selected-files">
-            <h3 className="files-title">Selected Files ({selectedFiles.length})</h3>
+            <h3 className="files-title">Selected File</h3>
             <div className="files-list">
-              {selectedFiles.map((fileInfo) => (
-                <div key={fileInfo.id} className="file-item">
-                  <div className="file-info">
-                    <div className="file-icon">
-                      <span className="favicon-file">📋</span>
-                    </div>
-                    <div className="file-details">
-                      <p className="file-name">{fileInfo.file.name}</p>
-                      <p className="file-meta">{fileInfo.size} • {fileInfo.type}</p>
-                    </div>
+              <div className="file-item">
+                <div className="file-info">
+                  <div className="file-icon">
+                    <span className="favicon-file">📋</span>
                   </div>
-                  <button
-                    className="remove-btn"
-                    onClick={() => removeFile(fileInfo.id)}
-                    title="Remove file"
-                  >
-                    <span className="favicon-remove">×</span>
-                  </button>
+                  <div className="file-details">
+                    <p className="file-name">{selectedFile.file.name}</p>
+                    <p className="file-meta">{selectedFile.size} • {selectedFile.type}</p>
+                  </div>
                 </div>
-              ))}
+                <button
+                  className="remove-btn"
+                  onClick={removeFile}
+                  title="Remove file"
+                >
+                  <span className="favicon-remove">×</span>
+                </button>
+              </div>
             </div>
             
             <div className="upload-actions">
               <button 
                 className="upload-btn"
                 onClick={handleUpload}
-                disabled={selectedFiles.length === 0}
               >
-                Upload Files
+                Upload File
               </button>
               <button 
                 className="clear-btn"
-                onClick={() => setSelectedFiles([])}
-                disabled={selectedFiles.length === 0}
+                onClick={removeFile}
               >
-                Clear All
+                Clear
               </button>
+              {uploadSuccess && (
+                <button 
+                  className="next-btn"
+                  onClick={() => {
+                    // Navigate to next page or perform next action
+                    console.log('Next button clicked');
+                  }}
+                >
+                  Next
+                </button>
+              )}
             </div>
           </div>
         )}
