@@ -83,6 +83,7 @@ const QuestionairePage: React.FC = () => {
     <div className="questionnaire-page">
       <Breadcrumb paths={[
         { name: 'Home', href: '/' },
+        { name: 'Upload', href: '/upload' },
         { name: 'Questionnaire', href: '/questionnaire' }
       ]} />
       <div className="questionnaire-container">
