@@ -4,12 +4,14 @@ import './Styles.css';
 import type { FileInfo } from '../../Models/IFileInfo';
 import Breadcrumb from '../../Components/Breadcrumb';
 import { IngestionRepository } from '../../Repositories/IngestionRepository';
+import { useNavigate } from 'react-router-dom';
 
 const UploadPage: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<FileInfo | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -186,8 +188,7 @@ const UploadPage: React.FC = () => {
                 <button 
                   className="next-btn"
                   onClick={() => {
-                    // Navigate to next page or perform next action
-                    console.log('Next button clicked');
+                    navigate('/questionaire');
                   }}
                 >
                   Next
