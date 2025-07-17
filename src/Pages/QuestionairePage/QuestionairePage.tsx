@@ -1,17 +1,20 @@
 import React, { useState, useLayoutEffect } from 'react';
 import './Styles.css';
 import type { IQuestion } from '../../Models/IQuestion';
-import { makeApiCall } from '../../Helper/RepositoryHelper';
 import Breadcrumb from '../../Components/Breadcrumb';
+import { useSearchParams } from 'react-router-dom';
+import { ProcessingActivityRepository } from '../../Repositories/ProcessingActivityRepository';
+import { GeneratePIARepository } from '../../Repositories/GeneratePIARepository';
+import Swal from 'sweetalert2';
+import type { SweetAlertResult } from 'sweetalert2';
 
 const initialCheckboxes = [
-  { label: 'Merchant Onboarding', checked: false },
-  { label: 'HR', checked: false },
-  { label: 'Promotional', checked: false },
-  { label: 'Talent Acquisition', checked: false },
+  { label: 'Sample Activity', checked: false },
 ];
 
 const QuestionairePage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const batch_id = searchParams.get('batch_id');
   const [checkboxes, setCheckboxes] = useState<{ label: string; checked: boolean }[]>([]);
   const [textBoxes, setTextBoxes] = useState<IQuestion[]>([
     { id: '1', question: '' }
@@ -20,9 +23,12 @@ const QuestionairePage: React.FC = () => {
   useLayoutEffect(() => {
     (async () => {
       try {
-        const response = await makeApiCall('/processing-activities');
-        const data = await response.json();
-        setCheckboxes(data);
+        if (!batch_id) {
+          alert('File is not selected. Please upload a file first.');
+          return;
+        }
+        const data = await ProcessingActivityRepository.fetchActivitiesByBatchId(batch_id);
+        setCheckboxes(data.processing_activities.map(activity => ({ label: activity, checked: false })));
       } catch (error) {
         setCheckboxes(initialCheckboxes);
       }
@@ -63,19 +69,38 @@ const QuestionairePage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (!batch_id) {
+      alert('File is not selected. Please upload a file first.');
+      return;
+    }
     try {
       const activities = checkboxes.filter(cb => cb.checked).map(cb => cb.label);
-      const response = await makeApiCall('/submit-questions', {
-        method: 'POST',
-        body: JSON.stringify({ questions: textBoxes, activities }),
-      });
+      const response = await GeneratePIARepository.generatePia(textBoxes[0].question, batch_id, activities);
       if (response.ok) {
-        alert('Questions submitted successfully!');
+        const result = await response.json();
+        Swal.fire({
+          title: 'Questions submitted successfully!',
+          text: 'Do you want to show answers?',
+          icon: 'success',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, show answers',
+          cancelButtonText: 'No',
+        }).then((res: SweetAlertResult) => {
+          if (res.isConfirmed) {
+            Swal.fire({
+              title: 'Answers',
+              html: `<pre style="text-align:left;white-space:pre-wrap;">${result.answer}</pre>`,
+              width: 600,
+              customClass: { popup: 'swal2-answers-popup' },
+              confirmButtonText: 'Close'
+            });
+          }
+        });
       } else {
-        alert('Failed to submit questions.');
+        Swal.fire('Failed to submit questions.', '', 'error');
       }
     } catch (error) {
-      alert('An error occurred while submitting questions.');
+      Swal.fire('An error occurred while submitting questions.', '', 'error');
     }
   };
 

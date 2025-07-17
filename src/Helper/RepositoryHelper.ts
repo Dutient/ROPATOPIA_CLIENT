@@ -1,5 +1,5 @@
 // Generic API call function that can be used across all repositories
-export async function makeApiCall(endpoint: string, options: RequestInit = {}): Promise<any> {
+export async function makeApiCall(endpoint: string, options: RequestInit = {}): Promise<Response> {
   const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
   const url = `${baseUrl}${endpoint}`;
   

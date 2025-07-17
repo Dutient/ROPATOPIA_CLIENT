@@ -1,19 +1,21 @@
 import { makeApiCall } from '../Helper/RepositoryHelper';
-import type { IngestionResponse } from '../Models/IngestionResponse';
 
 // Ingestion repository functions
 export class IngestionRepository {
   /**
    * Upload and ingest a file (CSV, XLSX, or PDF) to the backend
    * @param file - The file to upload and ingest
+   * @param companyName - The company name to send
+   * @param sheetName - The sheet name/number to send
    * @returns Promise with the embedding result
    */
-  static async ingestFile(file: File): Promise<IngestionResponse> {
+  static async ingestFile(file: File, companyName: string, sheetName: string): Promise<Response> {
     try {
       // Create FormData to send the file
       const formData = new FormData();
       formData.append('file', file);
-
+      formData.append('company', companyName);
+      formData.append('sheet_name', sheetName); 
       // Use makeApiCall with FormData
       const response = await makeApiCall('/ingest-file', {
         method: 'POST',
@@ -21,20 +23,11 @@ export class IngestionRepository {
         // Don't set Content-Type header - let the browser set it with boundary for FormData
         headers: {} // Override default headers for FormData
       });
-
-      const result = await response.json();
-      return {
-        embedding: result,
-        success: true
-      };
+      return response;
 
     } catch (error) {
       console.error('File ingestion failed:', error);
-      return {
-        embedding: [],
-        success: false,
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
-      };
+      throw error;
     }
   }
 

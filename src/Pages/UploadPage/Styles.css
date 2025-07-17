@@ -246,6 +246,47 @@
   cursor: not-allowed;
 }
 
+.input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.input-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1976d2;
+  margin-bottom: 6px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #bcd0e5;
+  border-radius: 7px;
+  font-size: 1rem;
+  font-family: inherit;
+  color: #081526;
+  background: #fafdff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  margin-bottom: 2px;
+}
+
+.input-field:focus {
+  border-color: #1976d2;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+}
+
+.required-asterisk {
+  color: #e53935;
+  font-weight: bold;
+  margin-left: 2px;
+  font-size: 1.1em;
+  vertical-align: middle;
+}
+
 /* Breadcrumb styles */
 .breadcrumb-list {
   display: flex;

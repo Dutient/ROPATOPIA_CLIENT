@@ -12,6 +12,9 @@ const UploadPage: React.FC = () => {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const [companyName, setCompanyName] = useState("");
+  const [sheetName, setSheetName] = useState("");
+  const [batchId, setBatchId] = useState("");
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -92,7 +95,19 @@ const UploadPage: React.FC = () => {
     fileInputRef.current?.click();
   };
 
+  const handleCompanyNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCompanyName(e.target.value);
+  };
+
+  const handleSheetNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSheetName(e.target.value);
+  };
+
   const handleUpload = async () => {
+    if (!companyName.trim()) {
+      alert('Please enter the company name.');
+      return;
+    }
     if (!selectedFile) {
       alert('Please select a file to upload.');
       return;
@@ -100,10 +115,11 @@ const UploadPage: React.FC = () => {
     
     // Call IngestionRepository.ingestFile for the selected file
     try {
-      const result = await IngestionRepository.ingestFile(selectedFile.file);
-      console.log('Ingestion result:', result);
-      if (result.success) {
+      const response = await IngestionRepository.ingestFile(selectedFile.file, companyName, sheetName);
+      if (response.ok) {
         setUploadSuccess(true);
+        const result = await response.json();
+        setBatchId(result.batch_id);
         alert('Upload successful!');
       } else {
         alert('Upload failed. Please try again.');
@@ -122,6 +138,35 @@ const UploadPage: React.FC = () => {
       ]} />
       <div className="upload-container">
         <h1 className="upload-title">File Upload</h1>
+
+        {/* Company Name Field */}
+        <div className="input-group">
+          <label htmlFor="companyName" className="input-label">Company Name <span className="required-asterisk" title="Required">*</span></label>
+          <input
+            id="companyName"
+            type="text"
+            className="input-field"
+            value={companyName}
+            onChange={handleCompanyNameChange}
+            placeholder="Enter company name"
+            autoComplete="off"
+            required
+          />
+        </div>
+
+        {/* Sheet Name Field (Numbers Only) */}
+        <div className="input-group">
+          <label htmlFor="sheetName" className="input-label">Sheet Name</label>
+          <input
+            id="sheetName"
+            type="text"
+            className="input-field"
+            value={sheetName}
+            onChange={handleSheetNameChange}
+            placeholder="Enter sheet number"
+            autoComplete="off"
+          />
+        </div>
         
         <div 
           className={`upload-area ${isDragOver ? 'drag-over' : ''}`}
@@ -134,6 +179,7 @@ const UploadPage: React.FC = () => {
             <span className="favicon-upload">⬆</span>
           </div>
           <p className="upload-text">
+            <span>File <span className="required-asterisk" title="Required">*</span></span><br/>
             Drag and drop files here, or <span className="click-here">click to browse</span>
           </p>
           <p className="upload-hint">Supports xlsx/csv/pdf files</p>
@@ -188,7 +234,7 @@ const UploadPage: React.FC = () => {
                 <button 
                   className="next-btn"
                   onClick={() => {
-                    navigate('/questionaire');
+                    navigate(`/questionaire?batch_id=${encodeURIComponent(batchId)}`);
                   }}
                 >
                   Next
