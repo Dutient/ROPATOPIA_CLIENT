@@ -19,6 +19,7 @@ const QuestionairePage: React.FC = () => {
   const [textBoxes, setTextBoxes] = useState<IQuestion[]>([
     { id: '1', question: '' }
   ]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useLayoutEffect(() => {
     (async () => {
@@ -73,6 +74,7 @@ const QuestionairePage: React.FC = () => {
       alert('File is not selected. Please upload a file first.');
       return;
     }
+    setIsSubmitting(true);
     try {
       const activities = checkboxes.filter(cb => cb.checked).map(cb => cb.label);
       const response = await GeneratePIARepository.generatePia(textBoxes[0].question, batch_id, activities);
@@ -87,9 +89,14 @@ const QuestionairePage: React.FC = () => {
           cancelButtonText: 'No',
         }).then((res: SweetAlertResult) => {
           if (res.isConfirmed) {
+            const questionsAndAnswers = textBoxes.map((textBox, index) => {
+              const answer = result.answer || 'No answer available';
+              return `<strong>Question ${index + 1}:</strong> ${textBox.question}<br><br><strong>Answer:</strong><br>${answer}<br><br>`;
+            }).join('<hr>');
+
             Swal.fire({
               title: 'Answers',
-              html: `<pre style="text-align:left;white-space:pre-wrap;">${result.answer}</pre>`,
+              html: `<pre style="text-align:left;white-space:pre-wrap;">${questionsAndAnswers}</pre>`,
               width: 600,
               customClass: { popup: 'swal2-answers-popup' },
               confirmButtonText: 'Close'
@@ -101,6 +108,8 @@ const QuestionairePage: React.FC = () => {
       }
     } catch (error) {
       Swal.fire('An error occurred while submitting questions.', '', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -164,7 +173,17 @@ const QuestionairePage: React.FC = () => {
             </div>
           ))}
         </div>
-        <button className="submit-btn" onClick={handleSubmit}>Submit</button>
+        <button 
+          className="submit-btn" 
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <span className="spinner"></span>
+          ) : (
+            'Submit'
+          )}
+        </button>
       </div>
     </div>
   );
