@@ -7,6 +7,8 @@ import { ProcessingActivityRepository } from '../../Repositories/ProcessingActiv
 import { GeneratePIARepository } from '../../Repositories/GeneratePIARepository';
 import Swal from 'sweetalert2';
 import type { SweetAlertResult } from 'sweetalert2';
+import ReactMarkdown from 'react-markdown';
+import ReactDOMServer from 'react-dom/server';
 
 const initialCheckboxes = [
   { label: 'Sample Activity', checked: false },
@@ -77,7 +79,14 @@ const QuestionairePage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const activities = checkboxes.filter(cb => cb.checked).map(cb => cb.label);
-      const response = await GeneratePIARepository.generatePia(textBoxes[0].question, batch_id, activities);
+      const payload: BulkRetrieveRequest = {
+        requests: textBoxes.map(textBox => ({
+          batch_id: batch_id,
+          query: textBox.question,
+          processing_activity: activities
+        }))
+      };
+      const response = await GeneratePIARepository.generatePia(payload);
       if (response.ok) {
         const result = await response.json();
         Swal.fire({
@@ -89,15 +98,35 @@ const QuestionairePage: React.FC = () => {
           cancelButtonText: 'No',
         }).then((res: SweetAlertResult) => {
           if (res.isConfirmed) {
+            console.log('API Response:', result); // Debug log
+            const resultsArray = result.results || result; // Handle both {results: [...]} and [...] formats
             const questionsAndAnswers = textBoxes.map((textBox, index) => {
-              const answer = result.answer || 'No answer available';
-              return `<strong>Question ${index + 1}:</strong> ${textBox.question}<br><br><strong>Answer:</strong><br>${answer}<br><br>`;
-            }).join('<hr>');
+              // Add safety checks for result structure
+              if (!Array.isArray(resultsArray)) {
+                console.error('Results is not an array:', resultsArray);
+                return `**Question ${index + 1}:** ${textBox.question}\n\n**Answer:**\nError: Unexpected response format\n\n`;
+              }
+              
+              if (!resultsArray[index]) {
+                console.error(`No result found for index ${index}:`, resultsArray);
+                return `**Question ${index + 1}:** ${textBox.question}\n\n**Answer:**\nNo answer available\n\n`;
+              }
+              
+              const answer = resultsArray[index].answer || 'No answer available';
+              return `**Question ${index + 1}:** ${textBox.question}\n\n**Answer:**\n${answer}\n\n`;
+            }).join('---\n\n');
+
+            // Create a custom component for markdown rendering
+            const MarkdownContent = () => (
+              <div style={{ textAlign: 'left', maxHeight: '400px', overflowY: 'auto' }}>
+                <ReactMarkdown>{questionsAndAnswers}</ReactMarkdown>
+              </div>
+            );
 
             Swal.fire({
               title: 'Answers',
-              html: `<pre style="text-align:left;white-space:pre-wrap;">${questionsAndAnswers}</pre>`,
-              width: 600,
+              html: ReactDOMServer.renderToString(<MarkdownContent />),
+              width: 700,
               customClass: { popup: 'swal2-answers-popup' },
               confirmButtonText: 'Close'
             });

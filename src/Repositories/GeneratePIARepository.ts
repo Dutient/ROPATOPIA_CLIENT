@@ -2,23 +2,16 @@ import { makeApiCall } from "../Helper/RepositoryHelper";
 
 export class GeneratePIARepository {
     /**
-   * Call the /generate_pia endpoint with query, batch_id, and processing_activity
-   * @param query - The query string
-   * @param batch_id - The batch ID (optional)
-   * @param processing_activity - List of processing activities (optional)
+   * Call the /bulk_generate_pia endpoint with BulkRetrieveRequest structure
+   * @param payload - The BulkRetrieveRequest containing requests array
    * @returns Promise<any> - The API response
    */
-  static async generatePia(query: string, batch_id?: string, processing_activity?: string[]): Promise<Response> {
+  static async generatePia(payload: BulkRetrieveRequest): Promise<Response> {
     try {
-      const body = {
-        query,
-        batch_id,
-        processing_activity,
-      };
-      const response = await makeApiCall('/generate_pia', {
+      const response = await makeApiCall('/bulk_generate_pia', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify(payload),
       });
       return response;
     } catch (error) {
