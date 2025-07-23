@@ -167,7 +167,7 @@ const AcitivityPage: React.FC = () => {
           ))}
         </div>
         {/* Right: Dynamic Text Boxes */}
-        <div className="questions-section">
+        {/* <div className="questions-section">
           <h3>Questions</h3>
           {textBoxes.map((_, idx) => (
             <div key={idx} className="question-row">
@@ -201,7 +201,7 @@ const AcitivityPage: React.FC = () => {
               )}
             </div>
           ))}
-        </div>
+        </div> */}
         <button 
           className="submit-btn" 
           onClick={handleSubmit}

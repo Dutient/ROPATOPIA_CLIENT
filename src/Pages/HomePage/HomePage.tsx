@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+// import Header from "../components/Header";
+
 import './Styles.css';
 
 const HomePage: React.FC = () => {
@@ -7,22 +9,27 @@ const HomePage: React.FC = () => {
     <div className="homepage">
       <div className="hero-section">
         <div className="hero-content">
-          <h1 className="hero-title">Welcome to Ropatopia</h1>
+          <h1 className="hero-title">Welcome to
+            <br className="hero-break" />
+            <span className="hero-title2">ROPAtoPIA</span>
+          </h1>
+
           <p className="hero-subtitle">
             Your AI-powered platform for intelligent content generation and analysis
           </p>
           <div className="hero-buttons">
-            <Link to="/claude-generate" className="cta-button primary">
+            {/* <Link to="/claude-generate" className="cta-button primary">
               Start Generating
-            </Link>
+            </Link> */}
             <Link to="/upload" className="cta-button secondary">
-              Upload Files
+              UPLOAD FILES<span className="triangle-arrow"></span>
+              {/* UPLOAD FILES */}
             </Link>
           </div>
         </div>
       </div>
-      
-      <div className="features-section">
+
+      {/* <div className="features-section">
         <div className="container">
           <h2 className="section-title">What We Offer</h2>
           <div className="features-grid">
@@ -41,9 +48,9 @@ const HomePage: React.FC = () => {
               <h3>Secure & Private</h3>
               <p>Your data is protected with enterprise-grade security</p>
             </div>
-          </div>
-        </div>
-      </div>
+          </div> */}
+      {/* </div> */}
+      {/* </div> */}
     </div>
   );
 };
