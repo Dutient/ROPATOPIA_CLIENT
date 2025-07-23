@@ -39,12 +39,13 @@
 
 .checkboxes-section {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 16px 24px;
   min-width: unset;
   margin-right: 0;
   margin-bottom: 1.5rem;
   justify-items: start;
+
 }
 
 .checkboxes-section h3 {
@@ -123,7 +124,7 @@
 }
 
 .submit-btn {
-  background: #bdd9f1;
+  background: #f1bd9f;
   color: #081526;
   border: none;
   padding: 0.75rem 2rem;
@@ -136,7 +137,7 @@
   box-shadow: 0 4px 16px rgba(79, 70, 229, 0.08);
 }
 .submit-btn:hover {
-  background: #a2c7e6;
+  background: #d8a689;
   color: #081526;
   transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(79, 70, 229, 0.13);
