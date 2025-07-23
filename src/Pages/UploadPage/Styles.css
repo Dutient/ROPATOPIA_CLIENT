@@ -1,6 +1,6 @@
 .upload-page {
   min-height: 100vh;
-  background: #081526;
+  background: #041324;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -28,7 +28,7 @@
 }
 
 .upload-title {
-  color: #bdd9f1;
+  color: #E86034;
   font-size: 2.2rem;
   font-weight: 700;
   margin-bottom: 28px;
@@ -39,7 +39,7 @@
 }
 
 .upload-area {
-  border: 2px dashed #bcd0e5;
+  border: 2px dashed #f19678;
   border-radius: 12px;
   padding: 48px 18px;
   cursor: pointer;
@@ -49,8 +49,8 @@
 }
 
 .upload-area:hover, .upload-area.drag-over {
-  border-color: #1976d2;
-  background: #f0f6fd;
+  border-color: #f28a64;
+  background: #f8ede9;
   box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
 }
 
@@ -61,7 +61,7 @@
 
 .favicon-upload {
   font-size: 44px;
-  color: #1976d2;
+  color: #E86034;
   font-weight: 400;
   text-shadow: none;
 }
@@ -85,7 +85,7 @@
 }
 
 .click-here {
-  color: #1976d2;
+  color: #E86034;
   font-weight: 600;
   text-decoration: underline;
   cursor: pointer;
@@ -106,7 +106,7 @@
 }
 
 .files-title {
-  color: #bdd9f1;
+  color: #e53935;
   font-size: 1.2rem;
   font-weight: 600;
   margin-bottom: 16px;
@@ -124,16 +124,16 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 14px;
-  background: #f5f7fa;
+  background: #f7f2ef;
   border-radius: 8px;
   margin-bottom: 8px;
-  border: 1px solid #e3eaf2;
+  border: 1px solid #f6cdbf;
   transition: border-color 0.2s, background 0.2s;
 }
 
 .file-item:hover {
-  background: #eaf3fb;
-  border-color: #1976d2;
+  background: #f8ede9;
+  border-color: #f28a64;
 }
 
 .file-info {
@@ -168,7 +168,7 @@
 }
 
 .remove-btn {
-  background: #bdd9f1;
+  background: #f8b299;
   color: #081526;
   border: none;
   border-radius: 6px;
@@ -185,7 +185,7 @@
 }
 
 .remove-btn:hover {
-  background: #a2c7e6;
+  background: #f28a64;
   color: #081526;
 }
 
@@ -212,12 +212,12 @@
 }
 
 .upload-btn {
-  background: #bdd9f1;
+  background: #f1bd9f;
   color: #081526;
 }
 
 .upload-btn:hover:not(:disabled) {
-  background: #a2c7e6;
+  background: #d8a689;
   color: #081526;
   box-shadow: 0 4px 12px rgba(25, 118, 210, 0.12);
 }
@@ -231,13 +231,14 @@
 
 .clear-btn {
   background: #f5f7fa;
-  color: #1976d2;
-  border: 2px solid #e3eaf2;
+  color:  black;
+  border: 2px solid #f6cdbf;
 }
 
 .clear-btn:hover:not(:disabled) {
-  background: #e3eaf2;
-  color: #125ea2;
+  background:  #f7f2ef;
+  color: black;
+  border: 2px solid #f6cdbf;
 }
 
 .clear-btn:disabled {
@@ -245,6 +246,11 @@
   color: #bcd0e5;
   cursor: not-allowed;
 }
+
+.next-btn:hover:not(:disabled) {
+  border: 2px solid #f6cdbf;
+}
+
 
 .input-group {
   display: flex;
@@ -256,14 +262,14 @@
 .input-label {
   font-size: 1rem;
   font-weight: 500;
-  color: #1976d2;
+  color: black;
   margin-bottom: 6px;
 }
 
 .input-field {
   width: 100%;
   padding: 10px 12px;
-  border: 1.5px solid #bcd0e5;
+  border: 1.5px solid #f19678; ;
   border-radius: 7px;
   font-size: 1rem;
   font-family: inherit;
@@ -275,7 +281,7 @@
 }
 
 .input-field:focus {
-  border-color: #1976d2;
+  border-color: #f28a64;
   box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
 }
 

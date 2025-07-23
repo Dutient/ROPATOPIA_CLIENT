@@ -156,7 +156,7 @@ const UploadPage: React.FC = () => {
 
         {/* Sheet Name Field (Numbers Only) */}
         <div className="input-group">
-          <label htmlFor="sheetName" className="input-label">Sheet Name</label>
+          <label htmlFor="sheetName" className="input-label">Sheet Name<span className="required-asterisk" title="Required">*</span></label>
           <input
             id="sheetName"
             type="text"
