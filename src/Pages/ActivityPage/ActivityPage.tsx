@@ -14,7 +14,7 @@ const initialCheckboxes = [
   { label: 'Sample Activity', checked: false },
 ];
 
-const QuestionairePage: React.FC = () => {
+const AcitivityPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const batch_id = searchParams.get('batch_id');
   const [checkboxes, setCheckboxes] = useState<{ label: string; checked: boolean }[]>([]);
@@ -218,4 +218,4 @@ const QuestionairePage: React.FC = () => {
   );
 };
 
-export default QuestionairePage;
+export default AcitivityPage;

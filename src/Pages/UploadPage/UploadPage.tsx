@@ -234,7 +234,7 @@ const UploadPage: React.FC = () => {
                 <button 
                   className="next-btn"
                   onClick={() => {
-                    navigate(`/questionaire?batch_id=${encodeURIComponent(batchId)}`);
+                    navigate(`/activity?batch_id=${encodeURIComponent(batchId)}`);
                   }}
                 >
                   Next
