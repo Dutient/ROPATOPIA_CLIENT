@@ -143,21 +143,6 @@
     box-shadow: 0 10px 25px rgba(79, 70, 229, 0.13);
   }
   
-  .spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid transparent;
-    border-top: 2px solid #081526;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    display: inline-block;
-  }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  
   .submit-btn:disabled {
     background: #bcd0e5;
     color: #fff;

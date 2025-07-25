@@ -1,6 +1,6 @@
 import React, { useState, useLayoutEffect } from 'react';
 import './Styles.css';
-import Breadcrumb from '../../Components/Breadcrumb';
+import Breadcrumb from '../../Components/Breadcrump/Breadcrumb';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ProcessingActivityRepository } from '../../Repositories/ProcessingActivityRepository';
 

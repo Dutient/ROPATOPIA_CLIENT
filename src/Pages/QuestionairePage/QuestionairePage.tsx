@@ -2,7 +2,8 @@ import React, { useState, useLayoutEffect, useEffect } from 'react';
 import type { IQuestion } from '../../Models/IQuestion';
 import ReactMarkdown from 'react-markdown';
 import { GeneratePIARepository } from '../../Repositories/GeneratePIARepository';
-import Breadcrumb from '../../Components/Breadcrumb';
+import Breadcrumb from '../../Components/Breadcrump/Breadcrumb';
+import Spinner from '../../Components/Spinner/Spinner';
 import { useSearchParams } from 'react-router-dom';
 
 const QuestionairePage: React.FC = () => {
@@ -164,7 +165,7 @@ const QuestionairePage: React.FC = () => {
                             title="Show answer"
                             onClick={() => toggleDropdown(q.id)}
                             style={{ marginLeft: 8 }}
-                            disabled={editMode}
+                            disabled={editMode || isSubmitting}
                         >
                             {openDropdowns[q.id] ? '▼' : '▶'}
                         </button>
@@ -210,7 +211,7 @@ const QuestionairePage: React.FC = () => {
                 disabled={isSubmitting || editMode}
             >
                 {isSubmitting ? (
-                    <span className="spinner"></span>
+                    <Spinner size={24} />
                 ) : (
                     'Submit'
                 )}
