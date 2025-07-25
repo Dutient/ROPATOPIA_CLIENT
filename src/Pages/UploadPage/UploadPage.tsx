@@ -2,13 +2,15 @@ import React, { useState, useRef } from 'react';
 import type { ChangeEvent } from 'react';
 import './Styles.css';
 import type { FileInfo } from '../../Models/IFileInfo';
-import Breadcrumb from '../../Components/Breadcrumb';
+import Breadcrumb from '../../Components/Breadcrump/Breadcrumb';
 import { IngestionRepository } from '../../Repositories/IngestionRepository';
 import { useNavigate } from 'react-router-dom';
+import Spinner from '../../Components/Spinner/Spinner';
 
 const UploadPage: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<FileInfo | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -115,6 +117,7 @@ const UploadPage: React.FC = () => {
     
     // Call IngestionRepository.ingestFile for the selected file
     try {
+      setIsSubmitting(true);
       const response = await IngestionRepository.ingestFile(selectedFile.file, companyName, sheetName);
       if (response.ok) {
         setUploadSuccess(true);
@@ -127,7 +130,9 @@ const UploadPage: React.FC = () => {
     } catch (error) {
       console.error('Ingestion error:', error);
       alert('Upload failed. Please try again.');
-    }
+    } finally {
+      setIsSubmitting(false);
+  }
   };
 
   return (
@@ -222,7 +227,11 @@ const UploadPage: React.FC = () => {
                 className="upload-btn"
                 onClick={handleUpload}
               >
-                Upload File
+                {isSubmitting ? (
+                    <Spinner size={24} />
+                ) : (
+                    'Submit'
+                )}
               </button>
               <button 
                 className="clear-btn"
