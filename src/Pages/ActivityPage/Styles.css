@@ -70,6 +70,60 @@
   gap: 8px;
 }
 
+.custom-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  position: relative;
+  padding-left: 24px;
+  font-weight: 500;
+}
+
+.custom-checkbox input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.custom-checkbox .checkmark {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  height: 18px;
+  width: 18px;
+  background-color: #eee;
+  border: 2px solid #E86034;
+  border-radius: 4px;
+}
+
+.custom-checkbox input:checked ~ .checkmark {
+  background-color: #ffa559;
+  border-color: #E86034;
+}
+
+.custom-checkbox .checkmark::after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.custom-checkbox input:checked ~ .checkmark::after {
+  display: block;
+}
+
+.custom-checkbox .checkmark::after {
+  left: 5px;
+  top: 1px;
+  width: 4px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
 .questions-section {
   flex: unset;
 }
