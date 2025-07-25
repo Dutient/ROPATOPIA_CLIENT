@@ -122,7 +122,7 @@ const QuestionairePage: React.FC = () => {
                 { name: 'Activity', href: `/activity?batch_id=${batch_id}` },
                 { name: 'Questionaire', href: '/questionaire' }
             ]} />
-          <h3>Questions</h3>
+          <h3 className="section-heading">Questions</h3>
           {textBoxes.map((_, idx) => (
             <div key={idx} className="question-row">
               <span className="question-index">{idx + 1}.</span>

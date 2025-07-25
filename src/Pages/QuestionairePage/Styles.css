@@ -72,8 +72,13 @@
   
   .questions-section {
     flex: unset;
+    margin-left: 1.5rem;
   }
-  
+
+  .section-heading {
+  margin-left: 1.5rem; /* or padding-left: 1.5rem; */
+  }
+
   .question-row {
     display: flex;
     align-items: center;
@@ -124,7 +129,7 @@
   }
   
   .submit-btn {
-    background: #f1bd9f;
+    background: white;
     color: #081526;
     border: none;
     padding: 0.75rem 2rem;
