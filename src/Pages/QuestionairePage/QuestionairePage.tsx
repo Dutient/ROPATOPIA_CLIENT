@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useLayoutEffect, useEffect } from 'react';
 import type { IQuestion } from '../../Models/IQuestion';
-import Swal, { type SweetAlertResult } from 'sweetalert2';
-import ReactDOMServer from 'react-dom/server';
 import ReactMarkdown from 'react-markdown';
 import { GeneratePIARepository } from '../../Repositories/GeneratePIARepository';
 import Breadcrumb from '../../Components/Breadcrumb';
@@ -17,104 +15,121 @@ const QuestionairePage: React.FC = () => {
     const [textBoxes, setTextBoxes] = useState<IQuestion[]>([
         { id: '1', question: '' }
     ]);
+    const [answers, setAnswers] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [openDropdowns, setOpenDropdowns] = useState<{ [key: string]: boolean }>({});
+    const [editMode, setEditMode] = useState(false);
+    const [shouldAutoSubmit, setShouldAutoSubmit] = useState(false);
+
+    const toggleDropdown = (id: string) => {
+        setOpenDropdowns(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    useLayoutEffect(() => {
+        (async () => {
+            try {
+                // Only set if still default (not user-modified)
+                setTextBoxes(prev => {
+                    if (prev.length === 1 && prev[0].question === '') {
+                        setShouldAutoSubmit(true);
+                        return [
+                            { id: '1', question: 'What is the purpose of this processing activity?' },
+                            { id: '2', question: 'What categories of personal data are involved?' },
+                            { id: '3', question: 'Who are the data subjects?' },
+                            { id: '4', question: 'What are the sources of the personal data?' },
+                            { id: '5', question: 'Who will have access to the data?' },
+                            { id: '6', question: 'How long will the data be retained?' },
+                            { id: '7', question: 'What security measures are in place to protect the data?' }
+                        ];
+                    }
+                    return prev;
+                });
+            } catch (error) {
+                // Optionally log or handle error
+                console.error('Error in useLayoutEffect:', error);
+            }
+        })();
+    }, []);
+
+    useEffect(() => {
+        if (shouldAutoSubmit) {
+            setShouldAutoSubmit(false);
+            handleSubmit();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [shouldAutoSubmit, textBoxes]);
 
     const handleTextBoxChange = (index: number, value: string) => {
         setTextBoxes(prev =>
-          prev.map((q, i) => (i === index ? { ...q, question: value } : q))
+            prev.map((q, i) => (i === index ? { ...q, question: value } : q))
         );
-      };
-    
-      const handleAddTextBox = () => {
-        setTextBoxes(prev => {
-          const newArr = [
-            ...prev,
-            { id: String(prev.length + 1), question: '' }
-          ];
-          return newArr;
-        });
-      };
-    
-      const handleRemoveTextBox = (index: number) => {
-        setTextBoxes(prev => {
-          if (prev.length <= 1) return prev;
-          const filtered = prev.filter((_, i) => i !== index);
-          // Reassign ids to be serial numbers after removal
-          return filtered.map((q, i) => ({ ...q, id: String(i + 1) }));
-        });
-      };
+    };
 
-      const handleSubmit = async () => {
+    const handleAddTextBox = () => {
+        setTextBoxes(prev => {
+            const newArr = [
+                ...prev,
+                { id: String(prev.length + 1), question: '' }
+            ];
+            return newArr;
+        });
+    };
+
+    const handleRemoveTextBox = (index: number) => {
+        setTextBoxes(prev => {
+            if (prev.length <= 1) return prev;
+            const filtered = prev.filter((_, i) => i !== index);
+            // Reassign ids to be serial numbers after removal
+            return filtered.map((q, i) => ({ ...q, id: String(i + 1) }));
+        });
+    };
+
+    const handleEdit = () => {
+      setEditMode(prev => {
+        const newEditMode = !prev;
+        if (newEditMode) {
+          setOpenDropdowns({}); // Close all dropdowns when entering edit mode
+          setAnswers([]); // Clear all answers when entering edit mode
+        }
+        return newEditMode;
+      });
+      
+    };
+
+    const handleSubmit = async () => {
         if (!batch_id || activities.length === 0) {
-          alert('Please select a file and an activity.');
-          return;
+            alert('Please select a file and an activity.');
+            return;
         }
         setIsSubmitting(true);
         try {
-          const payload: BulkRetrieveRequest = {
-            requests: textBoxes.map(textBox => ({
-              batch_id: batch_id,
-              query: textBox.question,
-              processing_activity: activities
-            }))
-          };
-          const response = await GeneratePIARepository.generatePia(payload);
-          if (response.ok) {
-            const result = await response.json();
-            Swal.fire({
-              title: 'Questions submitted successfully!',
-              text: 'Do you want to show answers?',
-              icon: 'success',
-              showCancelButton: true,
-              confirmButtonText: 'Yes, show answers',
-              cancelButtonText: 'No',
-            }).then((res: SweetAlertResult) => {
-              if (res.isConfirmed) {
-                console.log('API Response:', result); // Debug log
-                const resultsArray = result.results || result; // Handle both {results: [...]} and [...] formats
-                const questionsAndAnswers = textBoxes.map((textBox, index) => {
-                  // Add safety checks for result structure
-                  if (!Array.isArray(resultsArray)) {
-                    console.error('Results is not an array:', resultsArray);
-                    return `**Question ${index + 1}:** ${textBox.question}\n\n**Answer:**\nError: Unexpected response format\n\n`;
-                  }
-                  
-                  if (!resultsArray[index]) {
-                    console.error(`No result found for index ${index}:`, resultsArray);
-                    return `**Question ${index + 1}:** ${textBox.question}\n\n**Answer:**\nNo answer available\n\n`;
-                  }
-                  
-                  const answer = resultsArray[index].answer || 'No answer available';
-                  return `**Question ${index + 1}:** ${textBox.question}\n\n**Answer:**\n${answer}\n\n`;
-                }).join('---\n\n');
-    
-                // Create a custom component for markdown rendering
-                const MarkdownContent = () => (
-                  <div style={{ textAlign: 'left', maxHeight: '400px', overflowY: 'auto' }}>
-                    <ReactMarkdown>{questionsAndAnswers}</ReactMarkdown>
-                  </div>
-                );
-    
-                Swal.fire({
-                  title: 'Answers',
-                  html: ReactDOMServer.renderToString(<MarkdownContent />),
-                  width: 700,
-                  customClass: { popup: 'swal2-answers-popup' },
-                  confirmButtonText: 'Close'
-                });
-              }
-            });
-          } else {
-            Swal.fire('Failed to submit questions.', '', 'error');
-          }
+            const payload: BulkRetrieveRequest = {
+                requests: textBoxes.map(textBox => ({
+                    batch_id: batch_id,
+                    query: textBox.question,
+                    processing_activity: activities
+                }))
+            };
+            const response = await GeneratePIARepository.generatePia(payload);
+            if (response.ok) {
+                const result = await response.json();
+                const resultsArray = result.results || result;
+                // Map answers to question ids
+                if (Array.isArray(resultsArray)) {
+                  const newAnswers = resultsArray.map(result => result.answer || 'No answer available');
+                  setAnswers(newAnswers);
+                }
+            } else {
+                alert('Failed to submit questions.');
+            }
         } catch (error) {
-          Swal.fire('An error occurred while submitting questions.', '', 'error');
+            alert('An error occurred while submitting questions.');
         } finally {
-          setIsSubmitting(false);
+            setIsSubmitting(false);
         }
-      };
+    };
 
-      return (
+    return (
         <div className="questions-section">
             <Breadcrumb paths={[
                 { name: 'Home', href: '/' },
@@ -122,52 +137,86 @@ const QuestionairePage: React.FC = () => {
                 { name: 'Activity', href: `/activity?batch_id=${batch_id}` },
                 { name: 'Questionaire', href: '/questionaire' }
             ]} />
-          <h3>Questions</h3>
-          {textBoxes.map((_, idx) => (
-            <div key={idx} className="question-row">
-              <span className="question-index">{idx + 1}.</span>
-              <input
-                type="text"
-                value={textBoxes[idx].question}
-                onChange={e => handleTextBoxChange(idx, e.target.value)}
-                placeholder={`Enter question ${idx + 1}`}
-                className="question-input"
-              />
-              {textBoxes.length > 1 && (
+            <button
+                className="edit-btn"
+                style={{ marginBottom: 16 }}
+                onClick={handleEdit}
+            >
+                {editMode ? 'Done' : 'Edit'}
+            </button>
+            <h3>Questions</h3>
+            {textBoxes.map((q, idx) => (
+                <div key={q.id} className="question-row-with-dropdown">
+                    <div className="question-row">
+                        <span className="question-index">{idx + 1}.</span>
+                        <input
+                            type="text"
+                            value={q.question}
+                            onChange={e => editMode && handleTextBoxChange(idx, e.target.value)}
+                            placeholder={`Enter question ${idx + 1}`}
+                            className="question-input"
+                            readOnly={!editMode}
+                        />
+                        <button
+                            type="button"
+                            className="dropdown-btn"
+                            aria-label="Show answer"
+                            title="Show answer"
+                            onClick={() => toggleDropdown(q.id)}
+                            style={{ marginLeft: 8 }}
+                            disabled={editMode}
+                        >
+                            {openDropdowns[q.id] ? '▼' : '▶'}
+                        </button>
+                        {editMode && textBoxes.length > 1 && (
+                            <button
+                                onClick={() => handleRemoveTextBox(idx)}
+                                className="remove-question-btn"
+                                aria-label="Remove question"
+                                title="Remove question"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
+                    {openDropdowns[q.id] && (
+                        <div className="answer-dropdown" style={{ marginLeft: 32, marginTop: 4, marginBottom: 8, background: '#f5f7fa', borderRadius: 4, padding: 12 }}>
+                            <strong>Answer:</strong>
+                            <div style={{ marginTop: 4 }}>
+                                {answers[idx] ? (
+                                    <ReactMarkdown>{answers[idx]}</ReactMarkdown>
+                                ) : (
+                                    <em>No answer available. Submit to get answer.</em>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            ))}
+            {editMode && (
                 <button
-                  onClick={() => handleRemoveTextBox(idx)}
-                  className="remove-question-btn"
-                  aria-label="Remove question"
-                  title="Remove question"
+                    onClick={handleAddTextBox}
+                    className="add-question-btn add-question-btn-bottom"
+                    aria-label="Add question"
+                    title="Add question"
+                    style={{ marginTop: '16px', display: 'block', marginLeft: 'auto', marginRight: 0 }}
                 >
-                  ×
+                    ＋
                 </button>
-              )}
-              {idx === textBoxes.length - 1 && (
-                <button
-                  onClick={handleAddTextBox}
-                  className="add-question-btn"
-                  aria-label="Add question"
-                  title="Add question"
-                >
-                  ＋
-                </button>
-              )}
-            </div>
-          ))}
-          <button 
-          className="submit-btn" 
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <span className="spinner"></span>
-          ) : (
-            'Submit'
-          )}
-        </button>
+            )}
+            <button
+                className="submit-btn"
+                onClick={handleSubmit}
+                disabled={isSubmitting || editMode}
+            >
+                {isSubmitting ? (
+                    <span className="spinner"></span>
+                ) : (
+                    'Submit'
+                )}
+            </button>
         </div>
-    )
+    );
 };
 
-export default QuestionairePage
+export default QuestionairePage;
