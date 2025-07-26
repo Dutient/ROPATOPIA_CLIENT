@@ -167,7 +167,7 @@ const QuestionairePage: React.FC = () => {
                             style={{ marginLeft: 8 }}
                             disabled={editMode || isSubmitting}
                         >
-                            {openDropdowns[q.id] ? '▼' : '▶'}
+                            {openDropdowns[q.id] ? '▶' : '▼'}
                         </button>
                         {editMode && textBoxes.length > 1 && (
                             <button
