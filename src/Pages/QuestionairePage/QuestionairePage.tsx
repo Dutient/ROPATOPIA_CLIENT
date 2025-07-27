@@ -146,7 +146,7 @@ const QuestionairePage: React.FC = () => {
             >
                 {editMode ? 'Done' : 'Edit'}
             </button>
-            <h3>Questions</h3>
+            <h3 className='questions-title'>Questions</h3>
             {textBoxes.map((q, idx) => (
                 <div key={q.id} className="question-row-with-dropdown">
                     <div className="question-row">

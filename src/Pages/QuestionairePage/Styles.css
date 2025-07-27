@@ -17,6 +17,16 @@
     font-family: inherit;
   }
   
+  .questions-section{
+    padding: 22px;
+  }
+
+  .questions-title{
+    color:#e53935;
+    font-size: 1.7rem;
+    font-family:Georgia, 'Times New Roman', Times, serif
+  }
+
   .questionnaire-container {
     background: #fff;
     border-radius: 18px;

@@ -249,6 +249,7 @@
 
 .next-btn:hover:not(:disabled) {
   border: 2px solid #f6cdbf;
+  border-radius: 22px;
 }
 
 
