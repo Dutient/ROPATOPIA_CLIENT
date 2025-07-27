@@ -5,6 +5,7 @@ import { GeneratePIARepository } from '../../Repositories/GeneratePIARepository'
 import Breadcrumb from '../../Components/Breadcrump/Breadcrumb';
 import Spinner from '../../Components/Spinner/Spinner';
 import { useSearchParams } from 'react-router-dom';
+import './Styles.css';
 
 const QuestionairePage: React.FC = () => {
     const [searchParams] = useSearchParams();
