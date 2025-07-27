@@ -131,7 +131,6 @@ const QuestionairePage: React.FC = () => {
     };
 
     const handleDownload = () => {
-        // Prepare data: [{ Question: "...", Answer: "..." }, ...]
         const data = textBoxes.map((q, idx) => ({
             Question: q.question,
             Answer: answers[idx] || '' // Export as raw Markdown
@@ -139,27 +138,37 @@ const QuestionairePage: React.FC = () => {
 
         const worksheet = XLSX.utils.json_to_sheet(data);
 
-        // Dynamic column widths
+        // Dynamic column widths with max for Answer column
         const getMaxWidth = (arr: string[]) =>
             Math.max(...arr.map(str => (str ? str.length : 0)), 10);
 
         const questionColWidth = getMaxWidth(textBoxes.map(q => q.question));
-        const answerColWidth = getMaxWidth(answers);
+        const maxAnswerColWidth = 100;
+        const answerColWidth = Math.min(getMaxWidth(answers), maxAnswerColWidth);
 
         worksheet['!cols'] = [
             { wch: questionColWidth },
             { wch: answerColWidth }
         ];
 
-        // Enable text wrapping for all cells
+        // Enable text wrapping for all cells and style header row
         const range = XLSX.utils.decode_range(worksheet['!ref'] || '');
         for (let C = range.s.c; C <= range.e.c; ++C) {
             for (let R = range.s.r; R <= range.e.r; ++R) {
                 const cell_address = XLSX.utils.encode_cell({ c: C, r: R });
                 if (!worksheet[cell_address]) continue;
-                worksheet[cell_address].s = {
-                    alignment: { wrapText: true, vertical: "top" }
-                };
+                if (R === 0) {
+                    // Header row: green background
+                    worksheet[cell_address].s = {
+                        fill: { fgColor: { rgb: '90EE90' } }, // Light green
+                        font: { bold: true },
+                        alignment: { wrapText: true, vertical: "top", horizontal: "left" }
+                    };
+                } else {
+                    worksheet[cell_address].s = {
+                        alignment: { wrapText: true, vertical: "top" }
+                    };
+                }
             }
         }
 
