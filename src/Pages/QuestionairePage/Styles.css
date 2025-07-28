@@ -58,8 +58,17 @@
   
   }
   
+  .edit-btn {
+    background: #f1bd9f;
+    color: #081526;
+  }
+
   .edit-btn:hover {
     border-color :#f19678;
+    background: #d8a689;
+    color: #081526;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(79, 70, 229, 0.13);
   }
 
   .dropdown-btn {
