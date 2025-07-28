@@ -230,7 +230,6 @@
 }
 
 .clear-btn {
-  background: #f5f7fa;
   color:  black;
   border: 2px solid #f6cdbf;
 }
@@ -247,11 +246,16 @@
   cursor: not-allowed;
 }
 
-.next-btn:hover:not(:disabled) {
+.next-btn {
   border: 2px solid #f6cdbf;
   border-radius: 22px;
 }
 
+.next-btn:hover:not(:disabled) {
+  background:  #f7f2ef;
+  border: 2px solid #f6cdbf;
+  border-radius: 22px;
+}
 
 .input-group {
   display: flex;

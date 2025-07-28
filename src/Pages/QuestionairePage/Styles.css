@@ -159,6 +159,7 @@
     transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
     box-shadow: 0 4px 16px rgba(79, 70, 229, 0.08);
   }
+  
   .submit-btn:hover {
     background: #d8a689;
     color: #081526;
