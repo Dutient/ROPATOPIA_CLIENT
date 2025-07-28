@@ -17,6 +17,16 @@
     font-family: inherit;
   }
   
+  .questions-section{
+    padding: 22px;
+  }
+
+  .questions-title{
+    color:#e53935;
+    font-size: 1.7rem;
+    font-family:Georgia, 'Times New Roman', Times, serif
+  }
+
   .questionnaire-container {
     background: #fff;
     border-radius: 18px;
@@ -36,7 +46,7 @@
     font-weight: 700;
     margin-bottom: 28px;
   }
-  
+
   .checkboxes-section {
     display: grid;
     grid-template-columns: 1fr;
@@ -48,6 +58,19 @@
   
   }
   
+  .edit-btn:hover {
+    border-color :#f19678;
+  }
+
+  .dropdown-btn {
+    color :#dc3545;
+    transition: 0.3s;
+  }
+
+  .dropdown-btn:hover {
+    border-color :#f19678;
+  }
+
   .checkboxes-section h3 {
     grid-column: 1 / -1;
     text-align: center;
@@ -95,7 +118,7 @@
     margin-right: 8px;
     border-radius: 6px;
     border: 1px solid #e2e8f0;
-    background: #f8fafc;
+    background: #f7f2ef;
     color: #081526;
     transition: border 0.2s;
   }
@@ -136,6 +159,7 @@
     transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
     box-shadow: 0 4px 16px rgba(79, 70, 229, 0.08);
   }
+  
   .submit-btn:hover {
     background: #d8a689;
     color: #081526;
