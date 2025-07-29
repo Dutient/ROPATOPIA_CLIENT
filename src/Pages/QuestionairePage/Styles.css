@@ -12,7 +12,7 @@
   .breadcrumb-nav {
     width: 100%;
     max-width: 520px;
-    margin: 0 auto 1.2rem auto;
+    margin-left: 14px;
     font-size: 0.98rem;
     font-family: inherit;
   }
@@ -61,6 +61,10 @@
   .edit-btn {
     background: #f1bd9f;
     color: #081526;
+    margin-right: 15px;
+    margin-left: auto;
+    display: flex;
+    padding: 10px 16px;
   }
 
   .edit-btn:hover {
