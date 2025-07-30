@@ -185,60 +185,66 @@ const QuestionairePage: React.FC = () => {
                 { name: 'Activity', href: `/activity?batch_id=${batch_id}` },
                 { name: 'Questionaire', href: '/questionaire' }
             ]} />
-            <button
-                className="edit-btn"
-                style={{ marginBottom: 16 }}
-                onClick={handleEdit}
-            >
-                {editMode ? 'Done' : 'Edit'}
-            </button>
-            <h3 className='questions-title'>Questions</h3>
+            <div className="title-edit-container">
+                <h3 className='questions-title'>Questions</h3>
+                <button
+                    className="edit-btn"
+                    onClick={handleEdit}
+                >
+                    {editMode ? 'Done' : 'Edit'}
+                </button>
+            </div>
             {textBoxes.map((q, idx) => (
-                <div key={q.id} className="question-row-with-dropdown">
+                <div key={q.id} className="question-container">
                     <div className="question-row">
                         <span className="question-index">{idx + 1}.</span>
-                        <input
-                            type="text"
-                            value={q.question}
-                            onChange={e => editMode && handleTextBoxChange(idx, e.target.value)}
-                            placeholder={`Enter question ${idx + 1}`}
-                            className="question-input"
-                            readOnly={!editMode}
-                        />
-                        <button
-                            type="button"
-                            className="dropdown-btn"
-                            aria-label="Show answer"
-                            title="Show answer"
-                            onClick={() => toggleDropdown(q.id)}
-                            style={{ marginLeft: 8 }}
-                            disabled={editMode || isSubmitting}
-                        >
-                            {openDropdowns[q.id] ? '▶' : '▼'}
-                        </button>
-                        {editMode && textBoxes.length > 1 && (
-                            <button
-                                onClick={() => handleRemoveTextBox(idx)}
-                                className="remove-question-btn"
-                                aria-label="Remove question"
-                                title="Remove question"
-                            >
-                                ×
-                            </button>
-                        )}
-                    </div>
-                    {openDropdowns[q.id] && (
-                        <div className="answer-dropdown" style={{ marginLeft: 32, marginTop: 4, marginBottom: 8, background: '#f5f7fa', borderRadius: 4, padding: 12 }}>
-                            <strong>Answer:</strong>
-                            <div style={{ marginTop: 4 }}>
-                                {answers[idx] ? (
-                                    <ReactMarkdown>{answers[idx]}</ReactMarkdown>
-                                ) : (
-                                    <em>No answer available. Submit to get answer.</em>
-                                )}
+                        <div className="question-content-wrapper">
+                            <div className="question-content">
+                                <input
+                                    type="text"
+                                    value={q.question}
+                                    onChange={e => editMode && handleTextBoxChange(idx, e.target.value)}
+                                    placeholder={`Enter question ${idx + 1}`}
+                                    className="question-input"
+                                    readOnly={!editMode}
+                                />
                             </div>
+                            {openDropdowns[q.id] && (
+                                <div className="answer-dropdown">
+                                    <strong>Answer:</strong>
+                                    <div style={{ marginTop: 4 }}>
+                                        {answers[idx] ? (
+                                            <ReactMarkdown>{answers[idx]}</ReactMarkdown>
+                                        ) : (
+                                            <em>No answer available. Submit to get answer.</em>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    )}
+                        <div className="question-actions">
+                            <button
+                                type="button"
+                                className="dropdown-btn"
+                                aria-label="Show answer"
+                                title="Show answer"
+                                onClick={() => toggleDropdown(q.id)}
+                                disabled={editMode || isSubmitting}
+                            >
+                                {openDropdowns[q.id] ? '▶' : '▼'}
+                            </button>
+                            {editMode && textBoxes.length > 1 && (
+                                <button
+                                    onClick={() => handleRemoveTextBox(idx)}
+                                    className="remove-question-btn"
+                                    aria-label="Remove question"
+                                    title="Remove question"
+                                >
+                                    ×
+                                </button>
+                            )}
+                        </div>
+                    </div>
                 </div>
             ))}
             {editMode && (
@@ -252,26 +258,29 @@ const QuestionairePage: React.FC = () => {
                     ＋
                 </button>
             )}
-            <button
-                className="submit-btn"
-                onClick={handleSubmit}
-                disabled={isSubmitting || editMode}
-            >
-                {isSubmitting ? (
-                    <Spinner size={24} />
-                ) : (
-                    'Submit'
-                )}
-            </button>
+            
             {!editMode && (
-                <button
-                    className="download-btn"
-                    onClick={handleDownload}
-                    style={{ marginLeft: 8 }}
-                    disabled={textBoxes.length === 0 || answers.length === 0 || isSubmitting}
-                >
-                    Download Q&A
-                </button>
+                <div>
+                    <button
+                        className="submit-btn"
+                        onClick={handleSubmit}
+                        disabled={isSubmitting || editMode}
+                    >
+                    {isSubmitting ? (
+                        <Spinner size={24} />
+                        ) : (
+                        'Submit'
+                    )}
+                    </button>
+                    <button
+                        className="download-btn"
+                        onClick={handleDownload}
+                        style={{ marginLeft: 8 }}
+                        disabled={textBoxes.length === 0 || answers.length === 0 || isSubmitting}
+                    >
+                        Download Q&A
+                    </button>
+                </div>
             )}
         </div>
     );
