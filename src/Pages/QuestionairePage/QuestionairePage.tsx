@@ -6,6 +6,7 @@ import Breadcrumb from '../../Components/Breadcrump/Breadcrumb';
 import Spinner from '../../Components/Spinner/Spinner';
 import { useSearchParams } from 'react-router-dom';
 import './Styles.css';
+import * as XLSX from 'xlsx-js-style';
 
 const QuestionairePage: React.FC = () => {
     const [searchParams] = useSearchParams();
@@ -14,9 +15,7 @@ const QuestionairePage: React.FC = () => {
     const activityParam = searchParams.get('activity');
     const activities = activityParam ? activityParam.split(',') : [];
 
-    const [textBoxes, setTextBoxes] = useState<IQuestion[]>([
-        { id: '1', question: '' }
-    ]);
+    const [textBoxes, setTextBoxes] = useState<IQuestion[]>([]);
     const [answers, setAnswers] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [openDropdowns, setOpenDropdowns] = useState<{ [key: string]: boolean }>({});
@@ -32,7 +31,7 @@ const QuestionairePage: React.FC = () => {
             try {
                 // Only set if still default (not user-modified)
                 setTextBoxes(prev => {
-                    if (prev.length === 1 && prev[0].question === '') {
+                    if (prev.length === 0) {
                         setShouldAutoSubmit(true);
                         return [
                             { id: '1', question: 'What is the purpose of this processing activity?' },
@@ -131,6 +130,53 @@ const QuestionairePage: React.FC = () => {
         }
     };
 
+    const handleDownload = () => {
+        const data = textBoxes.map((q, idx) => ({
+            Question: q.question,
+            Answer: answers[idx] || '' // Export as raw Markdown
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(data);
+
+        // Dynamic column widths with max for Answer column
+        const getMaxWidth = (arr: string[]) =>
+            Math.max(...arr.map(str => (str ? str.length : 0)), 10);
+
+        const questionColWidth = getMaxWidth(textBoxes.map(q => q.question));
+        const maxAnswerColWidth = 100;
+        const answerColWidth = Math.min(getMaxWidth(answers), maxAnswerColWidth);
+
+        worksheet['!cols'] = [
+            { wch: questionColWidth },
+            { wch: answerColWidth }
+        ];
+
+        // Enable text wrapping for all cells and style header row
+        const range = XLSX.utils.decode_range(worksheet['!ref'] || '');
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+                const cell_address = XLSX.utils.encode_cell({ c: C, r: R });
+                if (!worksheet[cell_address]) continue;
+                if (R === 0) {
+                    // Header row: green background
+                    worksheet[cell_address].s = {
+                        fill: { fgColor: { rgb: '90EE90' } }, // Light green
+                        font: { bold: true },
+                        alignment: { wrapText: true, vertical: "top", horizontal: "left" }
+                    };
+                } else {
+                    worksheet[cell_address].s = {
+                        alignment: { wrapText: true, vertical: "top" }
+                    };
+                }
+            }
+        }
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Q&A");
+        XLSX.writeFile(workbook, "questions_and_answers.xlsx");
+    };
+
     return (
         <div className="questions-section">
             <Breadcrumb paths={[
@@ -217,6 +263,16 @@ const QuestionairePage: React.FC = () => {
                     'Submit'
                 )}
             </button>
+            {!editMode && (
+                <button
+                    className="download-btn"
+                    onClick={handleDownload}
+                    style={{ marginLeft: 8 }}
+                    disabled={textBoxes.length === 0 || answers.length === 0 || isSubmitting}
+                >
+                    Download Q&A
+                </button>
+            )}
         </div>
     );
 };
