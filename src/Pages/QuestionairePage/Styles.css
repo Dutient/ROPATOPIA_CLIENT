@@ -12,13 +12,13 @@
   .breadcrumb-nav {
     width: 100%;
     max-width: 520px;
-    margin-left: 14px;
+    margin-left: 3px;
     font-size: 0.98rem;
     font-family: inherit;
   }
   
   .questions-section{
-    padding: 22px;
+    padding: 28px;
   }
 
   .questions-title{
@@ -61,7 +61,7 @@
   .edit-btn {
     background: #f1bd9f;
     color: #081526;
-    margin-right: 15px;
+    margin-right: 0px;
     margin-left: auto;
     display: flex;
     padding: 10px 16px;
@@ -191,6 +191,35 @@
   }
   
   .submit-btn:disabled {
+    background: #d8a689;
+    color: #fff;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .download-btn {
+    background: #f1bd9f;
+    color: #081526;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+    box-shadow: 0 4px 16px rgba(79, 70, 229, 0.08);
+  }
+  
+  .download-btn:hover {
+    background: #d8a689;
+    color: #081526;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(79, 70, 229, 0.13);
+  }
+  
+  .download-btn:disabled {
     background: #d8a689;
     color: #fff;
     cursor: not-allowed;
