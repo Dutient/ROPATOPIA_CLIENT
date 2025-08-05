@@ -18,6 +18,7 @@ const QuestionairePage: React.FC = () => {
     const [textBoxes, setTextBoxes] = useState<IQuestion[]>([]);
     const [answers, setAnswers] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [processingQuestions, setProcessingQuestions] = useState<Set<number>>(new Set());
     const [openDropdowns, setOpenDropdowns] = useState<{ [key: string]: boolean }>({});
     const [editMode, setEditMode] = useState(false);
     const [shouldAutoSubmit, setShouldAutoSubmit] = useState(false);
@@ -103,25 +104,62 @@ const QuestionairePage: React.FC = () => {
             return;
         }
         setIsSubmitting(true);
+        // Initialize answers array with empty strings
+        setAnswers(new Array(textBoxes.length).fill(''));
+        setProcessingQuestions(new Set());
+        
         try {
-            const payload: BulkRetrieveRequest = {
-                requests: textBoxes.map(textBox => ({
+            // Loop through each textbox and call generatePia individually
+            for (let i = 0; i < textBoxes.length; i++) {
+                const textBox = textBoxes[i];
+                const payload: RetrieveRequest = {
                     batch_id: batch_id,
                     query: textBox.question,
                     processing_activity: activities
-                }))
-            };
-            const response = await GeneratePIARepository.generatePia(payload);
-            if (response.ok) {
-                const result = await response.json();
-                const resultsArray = result.results || result;
-                // Map answers to question ids
-                if (Array.isArray(resultsArray)) {
-                  const newAnswers = resultsArray.map(result => result.answer || 'No answer available');
-                  setAnswers(newAnswers);
+                };
+                
+                // Mark this question as being processed
+                setProcessingQuestions(prev => new Set([...prev, i]));
+                
+                let response: Response | undefined;
+                try {
+                    response = await GeneratePIARepository.generatePia(payload);
+                    if (response.ok) {
+                        const result = await response.json();
+                        const answer = result.answer || 'No answer available';
+                        // Update answers state immediately for this question
+                        setAnswers(prev => {
+                            const newAnswers = [...prev];
+                            newAnswers[i] = answer;
+                            return newAnswers;
+                        });
+                    } else {
+                        setAnswers(prev => {
+                            const newAnswers = [...prev];
+                            newAnswers[i] = 'Failed to get answer for this question.';
+                            return newAnswers;
+                        });
+                    }
+                } catch (error) {
+                    console.error(`Error processing question ${i + 1}:`, error);
+                    setAnswers(prev => {
+                        const newAnswers = [...prev];
+                        newAnswers[i] = 'Error occurred while processing this question.';
+                        return newAnswers;
+                    });
+                } finally {
+                    // Remove this question from processing set
+                    setProcessingQuestions(prev => {
+                        const newSet = new Set(prev);
+                        newSet.delete(i);
+                        return newSet;
+                    });
+                    
+                    // Only toggle dropdown if answer was successful (after processing is complete)
+                    if (response?.ok) {
+                        setOpenDropdowns(prev => ({ ...prev, [textBox.id]: !prev[textBox.id] }));
+                    }
                 }
-            } else {
-                alert('Failed to submit questions.');
             }
         } catch (error) {
             alert('An error occurred while submitting questions.');
@@ -229,9 +267,13 @@ const QuestionairePage: React.FC = () => {
                                 aria-label="Show answer"
                                 title="Show answer"
                                 onClick={() => toggleDropdown(q.id)}
-                                disabled={editMode || isSubmitting}
+                                disabled={editMode || processingQuestions.has(idx)}
                             >
-                                {openDropdowns[q.id] ? '▶' : '▼'}
+                                {processingQuestions.has(idx) ? (
+                                    <Spinner size={24} />
+                                ) : (
+                                    openDropdowns[q.id] ? '▶' : '▼'
+                                )}
                             </button>
                             {editMode && textBoxes.length > 1 && (
                                 <button
