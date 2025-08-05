@@ -34,13 +34,13 @@ const QuestionairePage: React.FC = () => {
                     if (prev.length === 0) {
                         setShouldAutoSubmit(true);
                         return [
-                            { id: '1', question: 'What is the purpose of this processing activity?' },
-                            { id: '2', question: 'What categories of personal data are involved?' },
-                            { id: '3', question: 'Who are the data subjects?' },
-                            { id: '4', question: 'What are the sources of the personal data?' },
-                            { id: '5', question: 'Who will have access to the data?' },
-                            { id: '6', question: 'How long will the data be retained?' },
-                            { id: '7', question: 'What security measures are in place to protect the data?' }
+                            { id: '1', question: 'Does the processing operation involve personal data?' },
+                            { id: '2', question: 'Does the processing operation involve sensitive/special category personal data?' },
+                            { id: '3', question: 'Does the processing operation involve evaluation and scoring of Data Subject?' },
+                            { id: '4', question: 'Does the processing operation involve automated means?' },
+                            { id: '5', question: 'Does the processing operation involve processing of systematic activity of the data principal?' },
+                            { id: '6', question: 'Does the processing operation involve use of new technological solutions?' },
+                            { id: '7', question: 'Does the processing operation involve processing of data pertaining to vulnerable data principals?' }
                         ];
                     }
                     return prev;

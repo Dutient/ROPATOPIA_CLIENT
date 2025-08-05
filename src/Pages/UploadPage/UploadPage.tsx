@@ -168,7 +168,7 @@ const UploadPage: React.FC = () => {
             className="input-field"
             value={sheetName}
             onChange={handleSheetNameChange}
-            placeholder="Enter sheet number"
+            placeholder="Enter sheet name"
             autoComplete="off"
           />
         </div>
