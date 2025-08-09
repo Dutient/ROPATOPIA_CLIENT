@@ -9,13 +9,14 @@ export class IngestionRepository {
    * @param sheetName - The sheet name/number to send
    * @returns Promise with the embedding result
    */
-  static async ingestFile(file: File, companyName: string, sheetName: string): Promise<Response> {
+  static async ingestFile(file: File, companyName: string, sheetName: string, template: string): Promise<Response> {
     try {
       // Create FormData to send the file
       const formData = new FormData();
       formData.append('file', file);
       formData.append('company', companyName);
-      formData.append('sheet_name', sheetName); 
+      formData.append('sheet_name', sheetName);
+      formData.append('template_type', template);
       // Use makeApiCall with FormData
       const response = await makeApiCall('/ingest-file', {
         method: 'POST',
