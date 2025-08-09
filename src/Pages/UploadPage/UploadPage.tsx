@@ -17,6 +17,7 @@ const UploadPage: React.FC = () => {
   const [companyName, setCompanyName] = useState("");
   const [sheetName, setSheetName] = useState("");
   const [batchId, setBatchId] = useState("");
+  const [template, setTemplate] = useState("a");
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -105,6 +106,10 @@ const UploadPage: React.FC = () => {
     setSheetName(e.target.value);
   };
 
+  const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTemplate(e.target.value);
+  };
+
   const handleUpload = async () => {
     if (!companyName.trim()) {
       alert('Please enter the company name.');
@@ -118,7 +123,7 @@ const UploadPage: React.FC = () => {
     // Call IngestionRepository.ingestFile for the selected file
     try {
       setIsSubmitting(true);
-      const response = await IngestionRepository.ingestFile(selectedFile.file, companyName, sheetName);
+      const response = await IngestionRepository.ingestFile(selectedFile.file, companyName, sheetName, template);
       if (response.ok) {
         setUploadSuccess(true);
         const result = await response.json();
@@ -171,6 +176,20 @@ const UploadPage: React.FC = () => {
             placeholder="Enter sheet name"
             autoComplete="off"
           />
+        </div>
+
+        {/* Template Selector */}
+        <div className="input-group">
+          <label htmlFor="template" className="input-label">Template</label>
+          <select
+            id="template"
+            className="input-field"
+            value={template}
+            onChange={handleTemplateChange}
+          >
+            <option value="a">Template A</option>
+            <option value="b">Template B</option>
+          </select>
         </div>
         
         <div 
