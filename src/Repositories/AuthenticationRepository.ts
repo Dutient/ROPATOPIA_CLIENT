@@ -2,7 +2,7 @@ import { makePublicApiCall, makeApiCall } from '../Helper/RepositoryHelper';
 import type { IAuthResponse, ILoginRequest, ISignupRequest, } from '../Models/IAuth';
 
 export class AuthenticationRepository {
-  private static tokenKey: string = '';
+  private static tokenKey: string = 'ropatopia_token';
 
    // Get access token
   static getAccessToken(): string | null {
@@ -90,15 +90,9 @@ export class AuthenticationRepository {
   // Sign up user
   static async signup(userData: ISignupRequest): Promise<boolean> {
     try {
-      // Create form data for signup endpoint
-      const formData = new FormData();
-      formData.append('email', userData.email);
-      formData.append('name', userData.name);
-      formData.append('password', userData.password);
-
       const response = await makePublicApiCall(`/auth/register`, {
         method: 'POST',
-        body: formData,
+        body: JSON.stringify(userData),
       });
       
       if (response.ok) {

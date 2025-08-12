@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useLayoutEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../Contexts/AuthContext';
 import type { ILoginRequest, ISignupRequest } from '../../Models/IAuth';
@@ -24,13 +24,14 @@ const LoginPage: React.FC = () => {
   // Validation states
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // Check if user is already authenticated
     if (isAuthenticated) {
       const from = (location.state as any)?.from?.pathname || '/';
       navigate(from);
     }
-  }, [isAuthenticated, navigate, location]);
+  }, []);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -76,32 +77,41 @@ const LoginPage: React.FC = () => {
     }
 
     setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    const isValid = Object.keys(errors).length === 0;
+    console.log('Form validation result:', isValid, 'Errors:', errors);
+    return isValid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-
+    
+    // Clear previous messages only if form validation passes
     if (!validateForm()) {
       return;
     }
 
     setLoading(true);
+    // Don't clear error/success immediately - let them persist during loading
 
     try {
+      // Clear previous messages before attempting login/signup
+      setError('');
+      setSuccess('');
+      
       if (isLogin) {
         await login(formData.username, formData.password);
+        console.log('Setting success message for login');
         setSuccess('Login successful! Redirecting...');
         
-        // Redirect after a short delay
+        // Navigate to home page after a brief delay to show success message
         setTimeout(() => {
           navigate('/');
-        }, 1500);
+        }, 3000);
+
       } else {
         if (formData.email && formData.name) {
           await signup(formData.email, formData.password, formData.name);
+          console.log('Setting success message for signup');
           setSuccess('Account created successfully! You can now login.');
           
           // Switch to login mode after successful signup
@@ -109,12 +119,13 @@ const LoginPage: React.FC = () => {
             setIsLogin(true);
             setFormData({ username: '', name: '', email: formData.email, password: '' });
             setSuccess('');
-          }, 2000);
+          }, 3000);
         }
       }
     } catch (err) {
       // Use the specific error messages from the repository
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -189,25 +200,23 @@ const LoginPage: React.FC = () => {
             )}
           </div>
 
-
-
-          {error && <div className="error-alert">{error}</div>}
-          {success && <div className="success-alert">{success}</div>}
-
           <button
             type="submit"
             className="submit-btn"
             disabled={loading}
           >
-            {loading ? (
-              <div className="loading-spinner">
-                <div className="spinner"></div>
-                {isLogin ? 'Signing in...' : 'Creating account...'}
-              </div>
-            ) : (
-              isLogin ? 'Sign In' : 'Create Account'
-            )}
-          </button>
+             {loading ? (
+               <div className="loading-spinner">
+                 <div className="spinner"></div>
+                 {isLogin ? 'Signing in...' : 'Creating account...'}
+               </div>
+             ) : (
+               isLogin ? 'Sign In' : 'Create Account'
+             )}
+           </button>
+
+           {error && <div className="error-alert">{error}</div>}
+           {success && <div className="success-alert">{success}</div>}
         </form>
 
         <div className="login-footer">

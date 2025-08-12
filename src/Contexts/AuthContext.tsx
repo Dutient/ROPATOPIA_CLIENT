@@ -72,8 +72,8 @@ const authReducer = (state: IAuthState, action: AuthAction): IAuthState => {
 // Context interface
 interface AuthContextType extends IAuthState {
   login: (username: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name: string) => Promise<void>;
-  logout: () => void;
+  signup: (email: string, password: string, name: string) => Promise<boolean>;
+  logout: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -131,7 +131,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Signup function
-  const signup = async (email: string, password: string, name: string) => {
+  const signup = async (email: string, password: string, name: string): Promise<boolean> => {
     dispatch({ type: 'LOGIN_START' });
 
     try {
@@ -143,6 +143,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (response) {
         dispatch({ type: 'SIGNUP_SUCCESS'})
+        return response;
       } else {
         throw new Error('Signup failed');
       }

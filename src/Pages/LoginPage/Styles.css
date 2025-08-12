@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #041324;
   padding: 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -118,6 +118,8 @@
   font-size: 0.95rem;
   text-align: center;
   animation: shake 0.5s ease-in-out;
+  margin: 10px 0;
+  font-weight: 500;
 }
 
 .success-alert {
@@ -129,6 +131,8 @@
   font-size: 0.95rem;
   text-align: center;
   animation: slideIn 0.3s ease-out;
+  margin: 10px 0;
+  font-weight: 500;
 }
 
 @keyframes shake {
