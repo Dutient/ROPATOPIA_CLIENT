@@ -10,7 +10,7 @@ static async fetchActivitiesByBatchId(batch_id: string): Promise<{ processing_ac
     try {
       const response = await makeApiCall(`/list/processing_activities?batch_id=${encodeURIComponent(batch_id)}`, {
         method: 'GET',
-      });
+      }, true);
       const result = await response.json();
       // Assume the result is an array of strings
       return result;

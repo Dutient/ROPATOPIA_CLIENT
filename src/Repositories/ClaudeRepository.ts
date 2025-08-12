@@ -2,12 +2,16 @@ import { makeApiCall } from '../Helper/RepositoryHelper';
 
 // Specific function for Claude API calls
 export async function generateClaudeResponse(message: string): Promise<any> {
-  const response = await makeApiCall('/claude/generate', {
-    method: 'POST',
-    body: JSON.stringify({ message })
-  });
+  try {
+    const response = await makeApiCall('/claude/generate', {
+      method: 'POST',
+      body: JSON.stringify({ message })
+    }, true);
 
-  const result = response.json();
-
-  return result;
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Claude API call failed:', error);
+    throw error;
+  }
 }
