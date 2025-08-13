@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../Contexts/AuthContext';
 import type { ILoginRequest, ISignupRequest } from '../../Models/IAuth';
 import './Styles.css';
+import Spinner from '../../Components/Spinner/Spinner';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -100,7 +101,6 @@ const LoginPage: React.FC = () => {
       
       if (isLogin) {
         await login(formData.username, formData.password);
-        console.log('Setting success message for login');
         setSuccess('Login successful! Redirecting...');
         
         // Navigate to home page after a brief delay to show success message
@@ -111,7 +111,6 @@ const LoginPage: React.FC = () => {
       } else {
         if (formData.email && formData.name) {
           await signup(formData.email, formData.password, formData.name);
-          console.log('Setting success message for signup');
           setSuccess('Account created successfully! You can now login.');
           
           // Switch to login mode after successful signup
@@ -202,14 +201,11 @@ const LoginPage: React.FC = () => {
 
           <button
             type="submit"
-            className="submit-btn"
+            className="sign-in-btn"
             disabled={loading}
           >
              {loading ? (
-               <div className="loading-spinner">
-                 <div className="spinner"></div>
-                 {isLogin ? 'Signing in...' : 'Creating account...'}
-               </div>
+               <Spinner size={24} />
              ) : (
                isLogin ? 'Sign In' : 'Create Account'
              )}

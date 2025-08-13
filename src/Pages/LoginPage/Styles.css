@@ -152,7 +152,7 @@
   }
 }
 
-.submit-btn {
+.sign-in-btn {
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   border: none;
@@ -167,40 +167,19 @@
   overflow: hidden;
 }
 
-.submit-btn:hover:not(:disabled) {
+.sign-in-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
 }
 
-.submit-btn:active:not(:disabled) {
+.sign-in-btn:active:not(:disabled) {
   transform: translateY(0);
 }
 
-.submit-btn:disabled {
+.sign-in-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
   transform: none;
-}
-
-.loading-spinner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 
 .login-footer {
@@ -251,7 +230,7 @@
     padding: 12px;
   }
   
-  .submit-btn {
+  .sign-in-btn {
     padding: 15px;
   }
 }
