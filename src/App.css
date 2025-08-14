@@ -8,6 +8,13 @@
 .App {
   width: 100%;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main content area */
+.App > *:not(nav) {
+  flex: 1;
 }
 
 * {
@@ -22,4 +29,10 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure pages have proper spacing from navbar */
+main, .page-content {
+  padding-top: 20px;
+  padding-bottom: 20px;
 }
