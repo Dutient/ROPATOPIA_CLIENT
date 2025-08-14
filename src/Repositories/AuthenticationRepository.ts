@@ -53,10 +53,8 @@ export class AuthenticationRepository {
         return data;
       } else {
         // Provide more specific error messages based on status codes
-        if (response.status === 401) {
+        if (response.status === 401 || response.status === 400) {
           throw new Error('Wrong username or password');
-        } else if (response.status === 400) {
-          throw new Error('Invalid credentials format');
         } else if (response.status === 500) {
           throw new Error('Server error. Please try again later.');
         } else if (response.status === 0) {

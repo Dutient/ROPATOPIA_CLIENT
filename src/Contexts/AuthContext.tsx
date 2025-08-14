@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { AuthenticationRepository } from '../Repositories/AuthenticationRepository';
 import type { IAuthState } from '../Models/IAuth';
@@ -10,13 +10,14 @@ type AuthAction =
   | { type: 'LOGIN_SUCCESS'; payload: { token: string; } }
   | { type: 'LOGIN_FAILURE'; payload: string }
   | { type: 'LOGOUT' }
-  | { type: 'CLEAR_ERROR' };
+  | { type: 'CLEAR_ERROR' }
+  | { type: 'INIT_COMPLETE' };
 
 // Initial state
 const initialState: IAuthState = {
   isAuthenticated: false,
   token: null,
-  loading: false,
+  loading: true, // Start with loading true to prevent premature redirects
   error: null,
 };
 
@@ -64,6 +65,11 @@ const authReducer = (state: IAuthState, action: AuthAction): IAuthState => {
         ...state,
         error: null,
       };
+    case 'INIT_COMPLETE':
+      return {
+        ...state,
+        loading: false,
+      };
     default:
       return state;
   }
@@ -98,11 +104,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           type: 'LOGIN_SUCCESS',
           payload: { token },
         });
+      } else {
+        // Set loading to false if no token found
+        dispatch({ type: 'INIT_COMPLETE' });
       }
     };
 
     initializeAuth();
-  }, []);
+  }, []); // Only run once on mount
 
   // Login function
   const login = async (username: string, password: string) => {
@@ -167,13 +176,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     dispatch({ type: 'CLEAR_ERROR' });
   };
 
-  const value: AuthContextType = {
+  const value: AuthContextType = useMemo(() => ({
     ...state,
     login,
     signup,
     logout,
     clearError,
-  };
+  }), [state, login, signup, logout, clearError]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -13,22 +13,30 @@ const AcitivityPage: React.FC = () => {
   const navigate = useNavigate();
   const batch_id = searchParams.get('batch_id');
   const [checkboxes, setCheckboxes] = useState<{ label: string; checked: boolean }[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   
 
   useLayoutEffect(() => {
-    (async () => {
+    if (!batch_id) {
+      alert('File is not selected. Please upload a file first.');
+      return;
+    }
+
+    const fetchActivities = async () => {
+      setIsLoading(true);
       try {
-        if (!batch_id) {
-          alert('File is not selected. Please upload a file first.');
-          return;
-        }
         const data = await ProcessingActivityRepository.fetchActivitiesByBatchId(batch_id);
         setCheckboxes(data.processing_activities.map(activity => ({ label: activity, checked: false })));
       } catch (error) {
+        console.error('Error fetching activities:', error);
         setCheckboxes(initialCheckboxes);
+      } finally {
+        setIsLoading(false);
       }
-    })();
-  }, []);
+    };
+
+    fetchActivities();
+  }, [batch_id]);
 
   const handleCheckboxChange = (index: number) => {
     setCheckboxes(prev =>
@@ -58,25 +66,30 @@ const AcitivityPage: React.FC = () => {
         {/* Left: Checkboxes */}
         <div className="checkboxes-section">
           <h3>Processing Activities</h3>
-          {checkboxes.map((cb, idx) => (
-            <div key={cb.label} className="checkbox-item">
-              <label className="custom-checkbox">
-                <input
-                  type="checkbox"
-                  checked={cb.checked}
-                  onChange={() => handleCheckboxChange(idx)}
-                />
-                <span className="checkmark"></span>
-                {cb.label}
-              </label>
-            </div>
-          ))}
+          {isLoading ? (
+            <div className="loading-message">Loading activities...</div>
+          ) : (
+            checkboxes.map((cb, idx) => (
+              <div key={cb.label} className="checkbox-item">
+                <label className="custom-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={cb.checked}
+                    onChange={() => handleCheckboxChange(idx)}
+                  />
+                  <span className="checkmark"></span>
+                  {cb.label}
+                </label>
+              </div>
+            ))
+          )}
         </div>
         <button 
           className="submit-btn" 
           onClick={handleNext}
+          disabled={isLoading}
         >
-          Next
+          {isLoading ? 'Loading...' : 'Next'}
         </button>
       </div>
     </div>

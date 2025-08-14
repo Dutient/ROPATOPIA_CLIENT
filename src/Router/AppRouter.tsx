@@ -10,7 +10,12 @@ import QuestionairePage from '../Pages/QuestionairePage/QuestionairePage';
 
 // Protected Route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+  
+  // Show minimal loading state while checking authentication
+  if (loading) {
+    return <div>Loading...</div>;
+  }
   
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };

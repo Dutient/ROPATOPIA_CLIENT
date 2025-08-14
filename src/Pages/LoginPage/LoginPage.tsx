@@ -25,13 +25,13 @@ const LoginPage: React.FC = () => {
   // Validation states
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  useLayoutEffect(() => {
-    // Check if user is already authenticated
-    if (isAuthenticated) {
-      const from = (location.state as any)?.from?.pathname || '/';
-      navigate(from);
-    }
-  }, []);
+  // useLayoutEffect(() => {
+  //   // Check if user is already authenticated
+  //   if (isAuthenticated) {
+  //     const from = (location.state as any)?.from?.pathname || '/';
+  //     navigate(from);
+  //   }
+  // }, [isAuthenticated, location.state]);
 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
