@@ -21,9 +21,7 @@ export class IngestionRepository {
       const response = await makeApiCall('/ingest-file', {
         method: 'POST',
         body: formData,
-        // Don't set Content-Type header - let the browser set it with boundary for FormData
-        headers: {} // Override default headers for FormData
-      });
+      }, true);
       return response;
 
     } catch (error) {

@@ -1,0 +1,46 @@
+/* Layout Component Styles */
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.main-content {
+  flex: 1;
+  transition: margin-left 0.3s ease;
+  background: transparent;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  width: calc(100% - 320px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .main-content.with-sidebar {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+/* Ensure proper spacing for content */
+.main-content > * {
+  flex: 1;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .main-content {
+    background: #1a1a1a;
+    color: #ffffff;
+  }
+}

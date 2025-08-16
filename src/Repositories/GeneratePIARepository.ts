@@ -10,9 +10,8 @@ export class GeneratePIARepository {
     try {
       const response = await makeApiCall('/bulk_generate_pia', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      });
+      }, true);
       return response;
     } catch (error) {
       console.error('Failed to generate PIA:', error);
@@ -29,9 +28,8 @@ export class GeneratePIARepository {
     try {
       const response = await makeApiCall('/generate_pia', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      });
+      }, true);
       return response;
     } catch (error) {
       console.error('Failed to generate single PIA:', error);

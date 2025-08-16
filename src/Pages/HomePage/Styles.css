@@ -1,16 +1,22 @@
 .homepage {
   min-height: 100vh;
+  width: 100%;
   background: #041324;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .hero-section {
   display: flex;
-  align-items: center;
   justify-content: left;
   min-height: 70vh;
+  width: 100%;
   padding: 2rem;
   text-align: right;
   color: white;
+  flex: 1;
 }
 
 .hero-content {
@@ -168,6 +174,60 @@
   line-height: 1.6;
 }
 
+/* Session Info Section */
+.session-info-section {
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  margin: 2rem 0;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.session-info-card {
+  color: white;
+}
+
+.session-info-card h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #E86034;
+}
+
+.session-info-card p {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.9;
+}
+
+.session-info-card strong {
+  color: #E86034;
+  font-weight: 600;
+}
+
+.session-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.session-action-btn {
+  padding: 10px 20px;
+  background: #E86034;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid #E86034;
+}
+
+.session-action-btn:hover {
+  background: #d4552e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(232, 96, 52, 0.3);
+}
+
 @media (max-width: 768px) {
   .hero-title {
     font-size: 2.5rem;
@@ -184,5 +244,18 @@
   
   .features-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .session-info-section {
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  
+  .session-actions {
+    flex-direction: column;
+  }
+  
+  .session-action-btn {
+    text-align: center;
   }
 } 
