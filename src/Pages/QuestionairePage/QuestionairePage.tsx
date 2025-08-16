@@ -4,16 +4,11 @@ import ReactMarkdown from 'react-markdown';
 import { GeneratePIARepository } from '../../Repositories/GeneratePIARepository';
 import Breadcrumb from '../../Components/Breadcrump/Breadcrumb';
 import Spinner from '../../Components/Spinner/Spinner';
-import { useSearchParams } from 'react-router-dom';
 import './Styles.css';
 import * as XLSX from 'xlsx-js-style';
 
-const QuestionairePage: React.FC = () => {
-    const [searchParams] = useSearchParams();
-    const batch_id = searchParams.get('batch_id') || '';
-    // Support multiple activities in the future, for now treat as array
-    const activityParam = searchParams.get('activity');
-    const activities = activityParam ? activityParam.split(',') : [];
+const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
+
 
     const [textBoxes, setTextBoxes] = useState<IQuestion[]>([]);
     const [answers, setAnswers] = useState<string[]>([]);
@@ -99,7 +94,7 @@ const QuestionairePage: React.FC = () => {
     };
 
     const handleSubmit = async () => {
-        if (!batch_id || activities.length === 0) {
+        if (!sessionId) {
             alert('Please select a file and an activity.');
             return;
         }

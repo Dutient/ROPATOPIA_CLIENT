@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { SessionRepository } from '../../Repositories/SessionRepository';
+import type { ISession } from '../../Models/ISession';
+import type { ISessionsListProps } from './ISessionListProps';
 import './Styles.css';
 
 const SessionsList: React.FC<ISessionsListProps> = ({
   onSessionSelect,
   selectedSessionId,
+  onUploadClick,
 }) => {
   const [sessions, setSessions] = useState<ISession[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showNewSessionForm, setShowNewSessionForm] = useState(false);
-  const [newSessionTitle, setNewSessionTitle] = useState('');
 
   useEffect(() => {
     fetchSessions();
@@ -36,29 +37,7 @@ const SessionsList: React.FC<ISessionsListProps> = ({
     }
   };
 
-  const handleCreateNewSession = async () => {
-    if (!newSessionTitle.trim()) return;
-    
-    try {
-      // Create a new session with company name and processing activities
-      const newSession: ISession = {
-        session_id: `session-${Date.now()}`,
-        company_name: newSessionTitle,
-        processing_activities: [],
-        isActive: true
-      };
-      
-      setSessions(prev => [newSession, ...prev]);
-      setNewSessionTitle('');
-      setShowNewSessionForm(false);
-      
-      if (onSessionSelect) {
-        onSessionSelect(newSession.session_id);
-      }
-    } catch (error) {
-      console.error('Failed to create new session:', error);
-    }
-  };
+
 
   const handleDeleteSession = async (sessionId: string, event: React.MouseEvent) => {
     event.stopPropagation();
@@ -74,7 +53,7 @@ const SessionsList: React.FC<ISessionsListProps> = ({
 
   const filteredSessions = (sessions).filter(session =>
     session.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    session.processing_activities.some(activity => 
+    session.processing_activities.some((activity: string) => 
       activity.toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
@@ -102,7 +81,7 @@ const SessionsList: React.FC<ISessionsListProps> = ({
         
         <button 
           className="new-session-button"
-          onClick={() => setShowNewSessionForm(true)}
+          onClick={onUploadClick}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 5v14M5 12h14"/>
@@ -110,37 +89,6 @@ const SessionsList: React.FC<ISessionsListProps> = ({
           New Session
         </button>
       </div>
-
-      {showNewSessionForm && (
-        <div className="new-session-form">
-          <input
-            type="text"
-            placeholder="Enter company name..."
-            value={newSessionTitle}
-            onChange={(e) => setNewSessionTitle(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleCreateNewSession()}
-            autoFocus
-          />
-          <div className="form-actions">
-            <button 
-              className="create-button"
-              onClick={handleCreateNewSession}
-              disabled={!newSessionTitle.trim()}
-            >
-              Create
-            </button>
-            <button 
-              className="cancel-button"
-              onClick={() => {
-                setShowNewSessionForm(false);
-                setNewSessionTitle('');
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
 
       <div className="search-container">
         <div className="search-input-wrapper">
@@ -202,7 +150,7 @@ const SessionsList: React.FC<ISessionsListProps> = ({
                   <div className="session-meta">
                     <div className="processing-activities">
                       {session.processing_activities.length > 0 ? (
-                        session.processing_activities.slice(0, 3).map((activity, index) => (
+                        session.processing_activities.slice(0, 3).map((activity: string, index: number) => (
                           <span key={index} className="activity-tag">
                             {activity}
                           </span>

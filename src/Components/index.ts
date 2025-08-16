@@ -4,3 +4,6 @@ export { default as LoadingSpinner } from './LoadingSpinner/LoadingSpinner';
 export { default as Navbar } from './Navbar/Navbar';
 export { default as SessionsList } from './SessionsList/SessionsList';
 export { default as Layout } from './Layout/Layout';
+export { default as UploadPopup } from './UploadPopup/UploadPopup';
+export { default as CommonPopup } from './CommonPopup/CommonPopup';
+export { default as ActivityPopup } from './ActivityPopup/ActivityPopup';
