@@ -12,20 +12,22 @@ const Layout: React.FC = () => {
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [showActivityPopup, setShowActivityPopup] = useState(false);
   const [batchId, setBatchId] = useState("");
+  const [company_name, setCompany_name] = useState("");
 
   const handleSessionSelect = (sessionId: string) => {
     setSelectedSessionId(sessionId);
   };
 
-  const handleUploadClick = (batchId: string) => {
+  const handleUploadClick = (batchId: string, company_name: string) => {
     setBatchId(batchId);
     setShowUploadPopup(false);
     setShowActivityPopup(true);
+    setCompany_name(company_name);
   };
 
   const handleActivitySelect = (session_id: string) => {
-    setSelectedSessionId(session_id);
     setShowActivityPopup(false);
+    setSelectedSessionId(session_id);
   };
 
   return (
@@ -59,6 +61,7 @@ const Layout: React.FC = () => {
       >
         <ActivityPopup
           batchId={batchId}
+          companyName={company_name}
           onNext={handleActivitySelect}
         />
       </CommonPopup>

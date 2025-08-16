@@ -1,11 +1,14 @@
 // import { makeApiCall } from "../Helper/RepositoryHelper";
 
+import { makeApiCall } from "../Helper/RepositoryHelper";
+import type { ISession } from "../Models/ISession";
+
 export class SessionRepository {
     /**
    * Fetch a list of sessions
    * @returns Promise<{ sessions: string[] }>
    */
-static async fetchAllSessions(): Promise<ISession[]> {
+  static async fetchAllSessions(): Promise<ISession[]> {
     try {
       // const response = await makeApiCall(`/sessions`, {
       //   method: 'GET',
@@ -50,5 +53,27 @@ static async fetchAllSessions(): Promise<ISession[]> {
       console.error('Failed to fetch Sessions:', error);
       return [];
     }
+  }
+
+  static async createSession(batch_id: string, activity: string[], company_name: string): Promise<Response> {
+    try {
+      const payload = {
+        batch_id,
+        processing_activities: activity,
+        company_name
+      };
+
+      const response = await makeApiCall(`/sessions`, {
+        method: 'GET',
+        body: JSON.stringify(payload),
+      }, true);
+
+      return response;
+      
+    } catch (error) {
+      console.error('Failed to create the session:', error);
+      throw error;
+    }
+      
   }
 }

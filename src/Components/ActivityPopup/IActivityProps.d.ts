@@ -1,4 +1,5 @@
 export interface IActivityPopupProps {
-    batchId?: string;
+    batchId: string;
+    companyName: string;
     onNext?: (selectedActivities: string) => void;
   }

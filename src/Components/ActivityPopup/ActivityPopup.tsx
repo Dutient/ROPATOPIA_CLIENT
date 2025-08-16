@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './Styles.css';
 import type { IActivityPopupProps } from './IActivityProps';
+import { SessionRepository } from '../../Repositories/SessionRepository';
 
 const ActivityPopup: React.FC<IActivityPopupProps> = ({
   batchId,
+  companyName,
   onNext
 }) => {
   const [checkboxes, setCheckboxes] = useState<{ label: string; checked: boolean }[]>([]);
@@ -25,7 +27,7 @@ const ActivityPopup: React.FC<IActivityPopupProps> = ({
 
   const fetchActivities = async () => {
     if (!batchId) return;
-    
+
     setIsLoading(true);
     try {
       // Import the repository dynamically to avoid circular dependencies
@@ -36,10 +38,10 @@ const ActivityPopup: React.FC<IActivityPopupProps> = ({
       console.error('Error fetching activities:', error);
       // Fallback to default activities
       setCheckboxes([
-        { label: 'Sample Activity', checked: false },
-        { label: 'Data Processing', checked: false },
-        { label: 'Content Analysis', checked: false },
-        { label: 'Report Generation', checked: false }
+        { label: 'Activity 1', checked: false },
+        { label: 'Activity 2', checked: false },
+        { label: 'Activity 3', checked: false },
+        { label: 'Activity 4', checked: false }
       ]);
     } finally {
       setIsLoading(false);
@@ -54,24 +56,29 @@ const ActivityPopup: React.FC<IActivityPopupProps> = ({
     );
   };
 
-  const handleNext = () => {
-    const selectedActivities = checkboxes.filter(cb => cb.checked).map(cb => cb.label).join(',');
-    if (!selectedActivities) {
+  const handleNext = async () => {
+    const selectedActivities = checkboxes.filter(cb => cb.checked).map(cb => cb.label);
+    
+    if (selectedActivities.length === 0) {
       alert('Please select an activity.');
       return;
-    }
-    
-    if (onNext) {
-      onNext(selectedActivities);
+    } 
+
+    try {
+      const response = await SessionRepository.createSession(batchId, selectedActivities, companyName);
+
+      if (response.ok && onNext) {
+        const result = await response.json();
+        onNext(result.session_id);
+      }
+    } catch (error) {
+      console.error('Error creating session:', error);
     }
   };
-
-  
 
   return (
     <div className="activity-popup">
       <div className="activity-popup-header">
-        <h3>Processing Activities</h3>
         <p className="activity-subtitle">
           Select the activities you want to perform with your uploaded data
         </p>
@@ -84,26 +91,29 @@ const ActivityPopup: React.FC<IActivityPopupProps> = ({
             <span>Loading activities...</span>
           </div>
         ) : (
-          <div className="checkboxes-section">
-            {checkboxes.map((cb, idx) => (
-              <div key={cb.label} className="checkbox-item">
-                <label className="custom-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={cb.checked}
-                    onChange={() => handleCheckboxChange(idx)}
-                  />
-                  <span className="checkmark"></span>
-                  {cb.label}
-                </label>
-              </div>
-            ))}
-          </div>
+          checkboxes.length === 0 ? (
+            <span>No activity found</span>
+          ) : (
+            <div className="checkboxes-section">
+              {checkboxes.map((cb, idx) => (
+                <div key={cb.label} className="checkbox-item">
+                  <label className="custom-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={cb.checked}
+                      onChange={() => handleCheckboxChange(idx)}
+                    />
+                    <span className="checkmark"></span>
+                    {cb.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+          )
         )}
-
         <div className="activity-actions">
-          <button 
-            className="activity-next-btn" 
+          <button
+            className="activity-next-btn"
             onClick={handleNext}
             disabled={isLoading || checkboxes.filter(cb => cb.checked).length === 0}
           >

@@ -1,3 +1,3 @@
 export interface IUploadPopupProps {
-    onUploadClick: (batchId: string) => void;
+    onUploadClick: (batchId: string, company_name: string) => void;
   }

@@ -136,7 +136,7 @@ const UploadPopup: React.FC<IUploadPopupProps> = ({
       if (response.ok) {
         const result = await response.json();
         setUploadSuccess(true);        
-        onUploadClick(result.batch_id);
+        onUploadClick(result.batch_id, companyName);
       } else {
         alert('Upload failed. Please try again.');
       }
