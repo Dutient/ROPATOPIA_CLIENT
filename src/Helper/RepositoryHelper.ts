@@ -4,8 +4,7 @@ export async function makeApiCall(
   options: RequestInit = {}, 
   requireAuth: boolean
 ): Promise<Response> {
-  // const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-  const baseUrl = 'http://localhost:8000';
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
   const url = `${baseUrl}${endpoint}`;
   
   // Get JWT token from localStorage if authentication is required
@@ -45,17 +44,10 @@ export async function makeApiCall(
   try {
     const response = await fetch(url, defaultOptions);
     
-    // Handle 401 Unauthorized - token might be expired
-    // if (response.status === 401 && requireAuth) {
-    //   // Clear invalid token and redirect to login
-    //   localStorage.removeItem('ropatopia_token');
-      
-    //   // Redirect to login page
-    //   if (typeof window !== 'undefined') {
-    //     window.location.href = '/login';
-    //   }
-    // }
-    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     // Don't throw error here - let the calling function handle specific status codes
     return response;
   } catch (error) {
