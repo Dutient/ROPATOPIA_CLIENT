@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { SessionRepository } from '../../Repositories/SessionRepository';
 import './Styles.css';
 
-
 const SessionsList: React.FC<ISessionsListProps> = ({
   onSessionSelect,
   selectedSessionId,
@@ -21,17 +20,8 @@ const SessionsList: React.FC<ISessionsListProps> = ({
     try {
       setLoading(true);
       const response = await SessionRepository.fetchAllSessions();
-      
-      // Transform the string array into Session objects
-      const sessionObjects: ISession[] = response.sessions.map((sessionId: string, index: number) => ({
-        id: sessionId,
-        title: `Session ${index + 1}`,
-        createdAt: new Date().toISOString(), // You might want to get actual dates from your API
-        lastModified: new Date().toISOString(),
-        isActive: sessionId === selectedSessionId
-      }));
-      
-      setSessions(sessionObjects);
+      const activeSession = response.filter(session => session.isActive);
+      setSessions(activeSession);
     } catch (error) {
       console.error('Failed to fetch sessions:', error);
       setSessions([]);
@@ -50,12 +40,11 @@ const SessionsList: React.FC<ISessionsListProps> = ({
     if (!newSessionTitle.trim()) return;
     
     try {
-      // Here you would typically call an API to create a new session
+      // Create a new session with company name and processing activities
       const newSession: ISession = {
-        id: `session-${Date.now()}`,
-        title: newSessionTitle,
-        createdAt: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
+        session_id: `session-${Date.now()}`,
+        company_name: newSessionTitle,
+        processing_activities: [],
         isActive: true
       };
       
@@ -64,7 +53,7 @@ const SessionsList: React.FC<ISessionsListProps> = ({
       setShowNewSessionForm(false);
       
       if (onSessionSelect) {
-        onSessionSelect(newSession.id);
+        onSessionSelect(newSession.session_id);
       }
     } catch (error) {
       console.error('Failed to create new session:', error);
@@ -76,31 +65,33 @@ const SessionsList: React.FC<ISessionsListProps> = ({
     
     if (window.confirm('Are you sure you want to delete this session?')) {
       try {
-        // Here you would typically call an API to delete the session
-        setSessions(prev => prev.filter(session => session.id !== sessionId));
+        setSessions(prev => prev.filter(session => session.session_id !== sessionId));
       } catch (error) {
         console.error('Failed to delete session:', error);
       }
     }
   };
 
-  const filteredSessions = sessions.filter(session =>
-    session.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSessions = (sessions).filter(session =>
+    session.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    session.processing_activities.some(activity => 
+      activity.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+  // const formatDate = (dateString: string) => {
+  //   const date = new Date(dateString);
+  //   const now = new Date();
+  //   const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
     
-    if (diffInHours < 24) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (diffInHours < 168) { // 7 days
-      return date.toLocaleDateString([], { weekday: 'short' });
-    } else {
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    }
-  };
+  //   if (diffInHours < 24) {
+  //     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  //   } else if (diffInHours < 168) { // 7 days
+  //     return date.toLocaleDateString([], { weekday: 'short' });
+  //   } else {
+  //     return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  //   }
+  // };
 
   return (
     <div className="sessions-list">
@@ -124,7 +115,7 @@ const SessionsList: React.FC<ISessionsListProps> = ({
         <div className="new-session-form">
           <input
             type="text"
-            placeholder="Enter session title..."
+            placeholder="Enter company name..."
             value={newSessionTitle}
             onChange={(e) => setNewSessionTitle(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleCreateNewSession()}
@@ -159,7 +150,7 @@ const SessionsList: React.FC<ISessionsListProps> = ({
           </svg>
           <input
             type="text"
-            placeholder="Search sessions..."
+            placeholder="Search by company name or processing activities..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
@@ -202,21 +193,34 @@ const SessionsList: React.FC<ISessionsListProps> = ({
           <div className="sessions-list-items">
             {filteredSessions.map((session) => (
               <div
-                key={session.id}
-                className={`session-item ${session.id === selectedSessionId ? 'active' : ''}`}
-                onClick={() => handleSessionClick(session.id)}
+                key={session.session_id}
+                className={`session-item ${session.session_id === selectedSessionId ? 'active' : ''}`}
+                onClick={() => handleSessionClick(session.session_id)}
               >
                 <div className="session-content">
-                  <div className="session-title">{session.title}</div>
+                  <div className="session-title">{session.company_name}</div>
                   <div className="session-meta">
-                    <span className="session-date">
-                      {formatDate(session.lastModified)}
-                    </span>
+                    <div className="processing-activities">
+                      {session.processing_activities.length > 0 ? (
+                        session.processing_activities.slice(0, 3).map((activity, index) => (
+                          <span key={index} className="activity-tag">
+                            {activity}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="no-activities">No processing activities</span>
+                      )}
+                      {session.processing_activities.length > 3 && (
+                        <span className="more-activities">
+                          +{session.processing_activities.length - 3} more
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <button
                   className="delete-session-button"
-                  onClick={(e) => handleDeleteSession(session.id, e)}
+                  onClick={(e) => handleDeleteSession(session.session_id, e)}
                   title="Delete session"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

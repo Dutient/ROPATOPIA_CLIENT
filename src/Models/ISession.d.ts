@@ -1,8 +1,7 @@
 interface ISession {
-    id: string;
-    title: string;
-    createdAt: string;
-    lastModified: string;
+    session_id: string;
+    company_name: string;
+    processing_activities: string[];
     isActive?: boolean;
   }
   
