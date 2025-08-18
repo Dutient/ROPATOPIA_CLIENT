@@ -9,6 +9,7 @@ import { SessionRepository } from '../../Repositories/SessionRepository';
 import type { IChat } from '../../Models/IChat';
 import { FaPlay } from 'react-icons/fa'; // Import run/play icon
 import type { IChatLight } from '../../Models/IChatLight';
+import { LoadingSpinner } from '../../Components';
 
 const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
 
@@ -16,46 +17,46 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
     const [editMode, setEditMode] = useState(false);
     const [latestChats, setLatestChats] = useState<IChatLight[]>([]);
     const [loadingAnswers, setLoadingAnswers] = useState<Set<string>>(new Set()); // Track loading states for specific questions
+    const [isLoading, setIsLoading] = useState(true); // Track loading state for the page
+
+    const getLatestChats = async (sessionId: string) => {
+        
+            const response = await SessionRepository.getSessionChat(sessionId);
+            if (response.ok) {
+                const items = await response.json();
+                const chats: IChat[] = items.chats || [];
+                if (chats.length > 0) {
+                    // Create a dictionary mapping chats by question_id
+                    const chatDictionary = chats.reduce((acc, chat) => {
+                        if (!acc[chat.question_id]) {
+                            acc[chat.question_id] = [];
+                        }
+                        acc[chat.question_id].push(chat);
+                        return acc;
+                    }, {} as { [key: string]: IChat[] });
+
+                    // Loop through the dictionary and get the latest question and answer
+                    return Object.entries(chatDictionary).map(([question_id, chatList]) => {
+                        const latestChat = chatList.reduce((latest, current) =>
+                            new Date(current.updated_at) > new Date(latest.updated_at) ? current : latest
+                        );
+                        return {
+                            question_id,
+                            question: latestChat.question,
+                            answer: latestChat.answer
+                        };
+                    });
+                }
+            }
+            return new Array<IChatLight>(); // Return an empty array if no chats are found
+    };
 
     useLayoutEffect(() => {
         (async () => {
-            try {
-                const response = await SessionRepository.getSessionChat(sessionId);
-                if (response.ok) {
-                    const items = await response.json();
-                    const chats: IChat[] = items.chats || [];
-                    if (chats.length > 0) {
-                        // Create a dictionary mapping chats by question_id
-                        const chatDictionary = chats.reduce((acc, chat) => {
-                            if (!acc[chat.question_id]) {
-                                acc[chat.question_id] = [];
-                            }
-                            acc[chat.question_id].push(chat);
-                            return acc;
-                        }, {} as { [key: string]: IChat[] });
-
-                        // Loop through the dictionary and get the latest question and answer
-                        const latestChatsData = Object.entries(chatDictionary).map(([question_id, chatList]) => {
-                            const latestChat = chatList.reduce((latest, current) =>
-                                new Date(current.updated_at) > new Date(latest.updated_at) ? current : latest
-                            );
-                            return {
-                                question_id,
-                                question: latestChat.question,
-                                answer: latestChat.answer
-                            };
-                        });
-
-                        setLatestChats(latestChatsData);
-                    } else {
-                        console.error('Invalid questions format:', items.questions);
-                    }
-                }
-                
-            } catch (error) {
-                // Optionally log or handle error
-                console.error('Error in useLayoutEffect:', error);
-            }
+            setIsLoading(true);
+            const latestChatsData = await getLatestChats(sessionId);
+            setLatestChats(latestChatsData);
+            setIsLoading(false);
         })();
     }, [sessionId]);
 
@@ -75,8 +76,20 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
     };
 
     const handleEdit = () => {
-      setOpenDropdowns({}); // Close all dropdowns when entering edit mode
-      setEditMode(prev => !prev);
+        setOpenDropdowns({}); // Close all dropdowns when entering edit mode
+        setEditMode(prev => {
+            const newEditMode = !prev;
+            if (!newEditMode) {
+                // Reload the latest chats when editing is done
+                (async () => {
+                    setIsLoading(true);
+                    const latestChatsData = await getLatestChats(sessionId);
+                    setLatestChats(latestChatsData);
+                    setIsLoading(false);
+                })();
+            }
+            return newEditMode;
+        });
     };
 
     const getAnswerForQuestion = async (question_id: string, query: string) => {
@@ -140,6 +153,12 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
         XLSX.utils.book_append_sheet(workbook, worksheet, "Q&A");
         XLSX.writeFile(workbook, "questions_and_answers.xlsx");
     };
+
+    if (isLoading) {
+        return (
+            <LoadingSpinner />
+        );
+    }
 
     return (
         <div className="questions-section">
