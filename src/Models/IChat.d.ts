@@ -1,7 +1,6 @@
-export interface IChat {
+import { IChatLight } from "./IChatLight";
+
+export interface IChat extends IChatLight {
     id: string;
-    question_id: string;
-    question: string;
-    answer: string;
     updated_at: string;
 }

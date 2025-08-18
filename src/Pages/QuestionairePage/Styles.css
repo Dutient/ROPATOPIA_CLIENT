@@ -282,6 +282,20 @@
     transform: none;
     box-shadow: none;
   }
+
+  .run-btn {
+    background: none;
+    border: none;
+    color: #007bff; /* Blue color */
+    font-size: 16px;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: color 0.3s ease;
+}
+
+.run-btn:hover {
+    color: #0056b3; /* Darker blue on hover */
+}
   
   @media (max-width: 600px) {
     .questionnaire-card {
@@ -291,4 +305,3 @@
       grid-template-columns: 1fr;
     }
   }
-  
