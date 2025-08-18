@@ -44,7 +44,8 @@ const SessionsList: React.FC<ISessionsListProps> = ({
     
     if (window.confirm('Are you sure you want to delete this session?')) {
       try {
-        setSessions(prev => prev.filter(session => session.session_id !== sessionId));
+        await SessionRepository.deleteSession(sessionId);
+        fetchSessions();
       } catch (error) {
         console.error('Failed to delete session:', error);
       }

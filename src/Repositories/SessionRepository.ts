@@ -63,4 +63,28 @@ export class SessionRepository {
     }
       
   }
+
+  static async getSessionChat(session_id: string): Promise<Response> {
+    try {
+      const response = await makeApiCall(`/session/${session_id}`, {
+        method: 'GET',
+      }, true);
+      return response;
+    } catch (error) {
+      console.error('Failed to fetch session chat:', error);
+      throw error;
+    }
+  }
+
+  static async deleteSession(session_id: string): Promise<Response> {
+    try {
+      const response = await makeApiCall(`/session/${session_id}`, {
+        method: 'DELETE',
+      }, true);
+      return response;
+    } catch (error) {
+      console.error('Failed to delete session:', error);
+      throw error;
+    }
+  }
 }
