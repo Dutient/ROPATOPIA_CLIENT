@@ -1,188 +1,127 @@
-import React, { useState, useLayoutEffect, useEffect } from 'react';
-import type { IQuestion } from '../../Models/IQuestion';
+import React, { useState, useLayoutEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { GeneratePIARepository } from '../../Repositories/GeneratePIARepository';
-import Breadcrumb from '../../Components/Breadcrump/Breadcrumb';
 import Spinner from '../../Components/Spinner/Spinner';
-import { useSearchParams } from 'react-router-dom';
 import './Styles.css';
 import * as XLSX from 'xlsx-js-style';
+import type { RetrieveRequest } from '../../Models/IPiaPayload';
+import { SessionRepository } from '../../Repositories/SessionRepository';
+import type { IChat } from '../../Models/IChat';
+import { FaPlay } from 'react-icons/fa'; // Import run/play icon
+import type { IChatLight } from '../../Models/IChatLight';
+import { LoadingSpinner } from '../../Components';
 
-const QuestionairePage: React.FC = () => {
-    const [searchParams] = useSearchParams();
-    const batch_id = searchParams.get('batch_id') || '';
-    // Support multiple activities in the future, for now treat as array
-    const activityParam = searchParams.get('activity');
-    const activities = activityParam ? activityParam.split(',') : [];
+const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
 
-    const [textBoxes, setTextBoxes] = useState<IQuestion[]>([]);
-    const [answers, setAnswers] = useState<string[]>([]);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [processingQuestions, setProcessingQuestions] = useState<Set<number>>(new Set());
     const [openDropdowns, setOpenDropdowns] = useState<{ [key: string]: boolean }>({});
     const [editMode, setEditMode] = useState(false);
-    const [shouldAutoSubmit, setShouldAutoSubmit] = useState(false);
+    const [latestChats, setLatestChats] = useState<IChatLight[]>([]);
+    const [loadingAnswers, setLoadingAnswers] = useState<Set<string>>(new Set()); // Track loading states for specific questions
+    const [isLoading, setIsLoading] = useState(true); // Track loading state for the page
+
+    const getLatestChats = async (sessionId: string) => {
+        
+            const response = await SessionRepository.getSessionChat(sessionId);
+            if (response.ok) {
+                const items = await response.json();
+                const chats: IChat[] = items.chats || [];
+                if (chats.length > 0) {
+                    // Create a dictionary mapping chats by question_id
+                    const chatDictionary = chats.reduce((acc, chat) => {
+                        if (!acc[chat.question_id]) {
+                            acc[chat.question_id] = [];
+                        }
+                        acc[chat.question_id].push(chat);
+                        return acc;
+                    }, {} as { [key: string]: IChat[] });
+
+                    // Loop through the dictionary and get the latest question and answer
+                    return Object.entries(chatDictionary).map(([question_id, chatList]) => {
+                        const latestChat = chatList.reduce((latest, current) =>
+                            new Date(current.updated_at) > new Date(latest.updated_at) ? current : latest
+                        );
+                        return {
+                            question_id,
+                            question: latestChat.question,
+                            answer: latestChat.answer
+                        };
+                    });
+                }
+            }
+            return new Array<IChatLight>(); // Return an empty array if no chats are found
+    };
+
+    useLayoutEffect(() => {
+        (async () => {
+            setIsLoading(true);
+            const latestChatsData = await getLatestChats(sessionId);
+            setLatestChats(latestChatsData);
+            setIsLoading(false);
+        })();
+    }, [sessionId]);
 
     const toggleDropdown = (id: string) => {
         setOpenDropdowns(prev => ({ ...prev, [id]: !prev[id] }));
     };
 
-    useLayoutEffect(() => {
-        (async () => {
-            try {
-                // Only set if still default (not user-modified)
-                setTextBoxes(prev => {
-                    if (prev.length === 0) {
-                        setShouldAutoSubmit(true);
-                        return [
-                            { id: '1', question: 'Does the processing operation involve personal data?' },
-                            { id: '2', question: 'Does the processing operation involve sensitive/special category personal data?' },
-                            { id: '3', question: 'Does the processing operation involve evaluation and scoring of Data Subject?' },
-                            { id: '4', question: 'Does the processing operation involve automated means?' },
-                            { id: '5', question: 'Does the processing operation involve processing of systematic activity of the data principal?' },
-                            { id: '6', question: 'Does the processing operation involve use of new technological solutions?' },
-                            { id: '7', question: 'Does the processing operation involve processing of data pertaining to vulnerable data principals?' }
-                        ];
-                    }
-                    return prev;
-                });
-            } catch (error) {
-                // Optionally log or handle error
-                console.error('Error in useLayoutEffect:', error);
+    const handleAdd = () => {
+        setLatestChats(prev => [
+            ...prev,
+            {
+                question_id: "",
+                question: '',
+                answer: ''
             }
-        })();
-    }, []);
-
-    useEffect(() => {
-        if (shouldAutoSubmit) {
-            setShouldAutoSubmit(false);
-            handleSubmit();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [shouldAutoSubmit, textBoxes]);
-
-    const handleTextBoxChange = (index: number, value: string) => {
-        setTextBoxes(prev =>
-            prev.map((q, i) => (i === index ? { ...q, question: value } : q))
-        );
-    };
-
-    const handleAddTextBox = () => {
-        setTextBoxes(prev => {
-            const newArr = [
-                ...prev,
-                { id: String(prev.length + 1), question: '' }
-            ];
-            return newArr;
-        });
-    };
-
-    const handleRemoveTextBox = (index: number) => {
-        setTextBoxes(prev => {
-            if (prev.length <= 1) return prev;
-            const filtered = prev.filter((_, i) => i !== index);
-            // Reassign ids to be serial numbers after removal
-            return filtered.map((q, i) => ({ ...q, id: String(i + 1) }));
-        });
+        ]);
     };
 
     const handleEdit = () => {
-      setEditMode(prev => {
-        const newEditMode = !prev;
-        if (newEditMode) {
-          setOpenDropdowns({}); // Close all dropdowns when entering edit mode
-          setAnswers([]); // Clear all answers when entering edit mode
-        }
-        return newEditMode;
-      });
-      
+        setOpenDropdowns({}); // Close all dropdowns when entering edit mode
+        setEditMode(prev => {
+            const newEditMode = !prev;
+            if (!newEditMode) {
+                // Reload the latest chats when editing is done
+                (async () => {
+                    setIsLoading(true);
+                    const latestChatsData = await getLatestChats(sessionId);
+                    setLatestChats(latestChatsData);
+                    setIsLoading(false);
+                })();
+            }
+            return newEditMode;
+        });
     };
 
-    const handleSubmit = async () => {
-        if (!batch_id || activities.length === 0) {
-            alert('Please select a file and an activity.');
-            return;
-        }
-        setIsSubmitting(true);
-        // Initialize answers array with empty strings
-        setAnswers(new Array(textBoxes.length).fill(''));
-        setProcessingQuestions(new Set());
-        
-        try {
-            // Loop through each textbox and call generatePia individually
-            for (let i = 0; i < textBoxes.length; i++) {
-                const textBox = textBoxes[i];
-                const payload: RetrieveRequest = {
-                    batch_id: batch_id,
-                    query: textBox.question,
-                    processing_activity: activities
-                };
-                
-                // Mark this question as being processed
-                setProcessingQuestions(prev => new Set([...prev, i]));
-                
-                let response: Response | undefined;
-                try {
-                    response = await GeneratePIARepository.generatePia(payload);
-                    if (response.ok) {
-                        const result = await response.json();
-                        const answer = result.answer || 'No answer available';
-                        // Update answers state immediately for this question
-                        setAnswers(prev => {
-                            const newAnswers = [...prev];
-                            newAnswers[i] = answer;
-                            return newAnswers;
-                        });
-                    } else {
-                        setAnswers(prev => {
-                            const newAnswers = [...prev];
-                            newAnswers[i] = 'Failed to get answer for this question.';
-                            return newAnswers;
-                        });
-                    }
-                } catch (error) {
-                    console.error(`Error processing question ${i + 1}:`, error);
-                    setAnswers(prev => {
-                        const newAnswers = [...prev];
-                        newAnswers[i] = 'Error occurred while processing this question.';
-                        return newAnswers;
-                    });
-                } finally {
-                    // Remove this question from processing set
-                    setProcessingQuestions(prev => {
-                        const newSet = new Set(prev);
-                        newSet.delete(i);
-                        return newSet;
-                    });
-                    
-                    // Only toggle dropdown if answer was successful (after processing is complete)
-                    if (response?.ok) {
-                        setOpenDropdowns(prev => ({ ...prev, [textBox.id]: !prev[textBox.id] }));
-                    }
-                }
-            }
-        } catch (error) {
-            alert('An error occurred while submitting questions.');
-        } finally {
-            setIsSubmitting(false);
+    const getAnswerForQuestion = async (question_id: string, query: string) => {
+        const payload: RetrieveRequest = {
+            query: query,
+            session_id: sessionId,
+            question_id: question_id || "",
+        };
+        const response = await GeneratePIARepository.generatePia(payload);
+        if (response.ok) {
+            const result: IChatLight = await response.json();
+            return { question_id: result.question_id, answer: result.answer };
+        } else {
+            return { question_id, answer: `Failed to retrieve answer for question ${question_id}` };
         }
     };
 
     const handleDownload = () => {
-        const data = textBoxes.map((q, idx) => ({
+        const items = latestChats.map((q, _) => ({
             Question: q.question,
-            Answer: answers[idx] || '' // Export as raw Markdown
+            Answer: q.answer || '' // Export as raw Markdown
         }));
 
-        const worksheet = XLSX.utils.json_to_sheet(data);
+        const worksheet = XLSX.utils.json_to_sheet(items);
 
         // Dynamic column widths with max for Answer column
         const getMaxWidth = (arr: string[]) =>
             Math.max(...arr.map(str => (str ? str.length : 0)), 10);
 
-        const questionColWidth = getMaxWidth(textBoxes.map(q => q.question));
+        const questionColWidth = getMaxWidth(latestChats.map(q => q.question));
         const maxAnswerColWidth = 100;
-        const answerColWidth = Math.min(getMaxWidth(answers), maxAnswerColWidth);
+        const answerColWidth = Math.min(getMaxWidth(latestChats.map(q => q.answer)), maxAnswerColWidth);
 
         worksheet['!cols'] = [
             { wch: questionColWidth },
@@ -215,16 +154,16 @@ const QuestionairePage: React.FC = () => {
         XLSX.writeFile(workbook, "questions_and_answers.xlsx");
     };
 
+    if (isLoading) {
+        return (
+            <LoadingSpinner />
+        );
+    }
+
     return (
         <div className="questions-section">
-            <Breadcrumb paths={[
-                { name: 'Home', href: '/' },
-                { name: 'Upload', href: '/upload' },
-                { name: 'Activity', href: `/activity?batch_id=${batch_id}` },
-                { name: 'Questionaire', href: '/questionaire' }
-            ]} />
             <div className="title-edit-container">
-                <h3 className='questions-title'>Questions</h3>
+                <h3 className='questions-title'>PIA</h3>
                 <button
                     className="edit-btn"
                     onClick={handleEdit}
@@ -232,29 +171,33 @@ const QuestionairePage: React.FC = () => {
                     {editMode ? 'Done' : 'Edit'}
                 </button>
             </div>
-            {textBoxes.map((q, idx) => (
-                <div key={q.id} className="question-container">
+            {latestChats.map((chat, idx) => (
+                <div key={chat.question_id} className="question-container">
                     <div className="question-row">
                         <span className="question-index">{idx + 1}.</span>
                         <div className="question-content-wrapper">
                             <div className="question-content">
                                 <input
                                     type="text"
-                                    value={q.question}
-                                    onChange={e => editMode && handleTextBoxChange(idx, e.target.value)}
-                                    placeholder={`Enter question ${idx + 1}`}
-                                    className="question-input"
+                                    value={chat.question}
+                                    onChange={e => editMode && setLatestChats(prev =>
+                                        prev.map((c, i) =>
+                                            i === idx ? { ...c, question: e.target.value } : c
+                                        )
+                                    )}
                                     readOnly={!editMode}
+                                    placeholder="Enter your question here"
+                                    className="question-input"
                                 />
                             </div>
-                            {openDropdowns[q.id] && (
+                            {openDropdowns[chat.question_id] && (
                                 <div className="answer-dropdown">
                                     <strong>Answer:</strong>
                                     <div style={{ marginTop: 4 }}>
-                                        {answers[idx] ? (
-                                            <ReactMarkdown>{answers[idx]}</ReactMarkdown>
+                                        {chat.answer ? (
+                                            <ReactMarkdown>{chat.answer}</ReactMarkdown>
                                         ) : (
-                                            <em>No answer available. Submit to get answer.</em>
+                                            <em>No answer available.</em>
                                         )}
                                     </div>
                                 </div>
@@ -266,18 +209,39 @@ const QuestionairePage: React.FC = () => {
                                 className="dropdown-btn"
                                 aria-label="Show answer"
                                 title="Show answer"
-                                onClick={() => toggleDropdown(q.id)}
-                                disabled={editMode || processingQuestions.has(idx)}
+                                onClick={() => toggleDropdown(chat.question_id)}
                             >
-                                {processingQuestions.has(idx) ? (
-                                    <Spinner size={24} />
-                                ) : (
-                                    openDropdowns[q.id] ? '▶' : '▼'
-                                )}
+                                {openDropdowns[chat.question_id] ? '▶' : '▼'}
                             </button>
-                            {editMode && textBoxes.length > 1 && (
+                            <button
+                                type="button"
+                                className="run-btn"
+                                aria-label="Run to get answer"
+                                title="Run to get answer"
+                                disabled={!editMode || loadingAnswers.has(chat.question_id)}
+                                onClick={async () => {
+                                    setLoadingAnswers(prev => new Set([...prev, chat.question_id])); // Mark question as loading
+                                    const result = await getAnswerForQuestion(chat.question_id, chat.question);
+                                    setLatestChats(prev =>
+                                        prev.map((c, i) =>
+                                            i === idx ? { ...c, question_id: result.question_id, answer: result.answer } : c
+                                        )
+                                    );
+                                    setLoadingAnswers(prev => {
+                                        const newSet = new Set(prev);
+                                        newSet.delete(chat.question_id); // Remove question from loading state
+                                        return newSet;
+                                    });
+                                    setOpenDropdowns(prev => ({ ...prev, [result.question_id]: true })); // Open dropdown after loading
+                                }}
+                            >
+                                {loadingAnswers.has(chat.question_id) ? <Spinner size={16} /> : <FaPlay />}
+                            </button>
+                            {editMode && latestChats.length > 1 && (
                                 <button
-                                    onClick={() => handleRemoveTextBox(idx)}
+                                    onClick={() => setLatestChats(prev =>
+                                        prev.filter((_, i) => i !== idx)
+                                    )}
                                     className="remove-question-btn"
                                     aria-label="Remove question"
                                     title="Remove question"
@@ -287,11 +251,12 @@ const QuestionairePage: React.FC = () => {
                             )}
                         </div>
                     </div>
+                    
                 </div>
             ))}
             {editMode && (
                 <button
-                    onClick={handleAddTextBox}
+                    onClick={handleAdd}
                     className="add-question-btn add-question-btn-bottom"
                     aria-label="Add question"
                     title="Add question"
@@ -300,25 +265,13 @@ const QuestionairePage: React.FC = () => {
                     ＋
                 </button>
             )}
-            
             {!editMode && (
                 <div>
-                    <button
-                        className="submit-btn"
-                        onClick={handleSubmit}
-                        disabled={isSubmitting || editMode}
-                    >
-                    {isSubmitting ? (
-                        <Spinner size={24} />
-                        ) : (
-                        'Submit'
-                    )}
-                    </button>
                     <button
                         className="download-btn"
                         onClick={handleDownload}
                         style={{ marginLeft: 8 }}
-                        disabled={textBoxes.length === 0 || answers.length === 0 || isSubmitting}
+                        disabled={latestChats.length === 0}
                     >
                         Download Q&A
                     </button>

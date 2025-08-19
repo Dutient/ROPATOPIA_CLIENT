@@ -98,6 +98,22 @@
 .cta-button.secondary:hover {
   background: rgba(255, 255, 255, 0.922);
   border-color: rgba(255, 255, 255, 0.5);
+}
+
+.triangle-arrow {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 6px solid currentColor;
+  margin-left: 8px;
+  transition: transform 0.2s ease;
+}
+
+.cta-button:hover .triangle-arrow {
+  transform: translateY(2px);
+}
   transform: translateY(-2px);
   color: black;
 }

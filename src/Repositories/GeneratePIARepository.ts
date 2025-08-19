@@ -1,4 +1,5 @@
 import { makeApiCall } from "../Helper/RepositoryHelper";
+import type { BulkRetrieveRequest, RetrieveRequest } from "../Models/IPiaPayload";
 
 export class GeneratePIARepository {
     /**

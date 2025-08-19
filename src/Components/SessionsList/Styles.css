@@ -343,6 +343,40 @@
   color: #999;
 }
 
+/* Processing Activities Styles */
+.processing-activities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.activity-tag {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: 1px solid #bbdefb;
+}
+
+.no-activities {
+  font-size: 0.7rem;
+  color: #999;
+  font-style: italic;
+}
+
+.more-activities {
+  font-size: 0.7rem;
+  color: #666;
+  font-weight: 500;
+}
+
 .delete-session-button {
   background: none;
   border: none;
@@ -462,6 +496,20 @@
   
   .session-date {
     color: #aaa;
+  }
+  
+  .activity-tag {
+    background: #1e3a5f;
+    color: #64b5f6;
+    border-color: #1976d2;
+  }
+  
+  .no-activities {
+    color: #aaa;
+  }
+  
+  .more-activities {
+    color: #ccc;
   }
   
   .empty-state {

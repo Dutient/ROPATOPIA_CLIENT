@@ -112,6 +112,22 @@
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
+/* Enhanced Logout Button */
+.enhanced-logout-btn {
+  background-color: #ff4d4d; /* Red background */
+  color: white; /* White text */
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.enhanced-logout-btn:hover {
+  background-color: #e60000; /* Darker red on hover */
+}
+
 /* Mobile Menu Button */
 .mobile-menu-button {
   display: none;
@@ -265,4 +281,24 @@
 /* Smooth scrolling for the page */
 html {
   scroll-behavior: smooth;
+}
+
+.icon-logout-btn {
+    background: none; /* Remove background */
+    border: none; /* Remove border */
+    color: #333; /* Text color */
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 8px; /* Space between icon and text */
+    transition: color 0.3s ease;
+}
+
+.icon-logout-btn:hover {
+    color: #feffff; /* Change hover color to blue */
+}
+
+.logout-icon {
+    font-size: 16px; /* Icon size */
 }

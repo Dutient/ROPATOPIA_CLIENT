@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Contexts/AuthContext';
+import { FaSignOutAlt } from 'react-icons/fa'; // Import logout icon
 import './Styles.css';
 
 const Navbar: React.FC = () => {
@@ -16,14 +17,13 @@ const Navbar: React.FC = () => {
     }
   };
 
-
   return (
     <nav className="navbar">
       <div className="navbar-container">
         {/* Logo/Brand */}
         <div className="navbar-brand">
           <Link to="/">
-            <h1>Ropatopia</h1>
+            <h1>ROPATOPIA</h1>
           </Link>
         </div>
 
@@ -31,10 +31,10 @@ const Navbar: React.FC = () => {
         <div className="navbar-auth">
           {isAuthenticated ? (
             <button 
-              className="logout-btn"
+              className="logout-btn icon-logout-btn" // Updated class
               onClick={handleLogout}
             >
-              Logout
+              <FaSignOutAlt className="logout-icon" /> Logout
             </button>
           ) : (
             <Link to="/login" className="login-btn">
