@@ -78,7 +78,7 @@ export class SessionRepository {
 
   static async deleteSession(session_id: string): Promise<Response> {
     try {
-      const response = await makeApiCall(`/session/${session_id}`, {
+      const response = await makeApiCall(`/delete/session/${session_id}`, {
         method: 'DELETE',
       }, true);
       return response;

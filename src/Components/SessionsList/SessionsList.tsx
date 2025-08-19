@@ -3,6 +3,7 @@ import { SessionRepository } from '../../Repositories/SessionRepository';
 import type { ISession } from '../../Models/ISession';
 import type { ISessionsListProps } from './ISessionListProps';
 import './Styles.css';
+import Swal from 'sweetalert2';
 
 const SessionsList: React.FC<ISessionsListProps> = ({
   onSessionSelect,
@@ -37,19 +38,29 @@ const SessionsList: React.FC<ISessionsListProps> = ({
     }
   };
 
-
-
   const handleDeleteSession = async (sessionId: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    
-    if (window.confirm('Are you sure you want to delete this session?')) {
-      try {
-        await SessionRepository.deleteSession(sessionId);
-        fetchSessions();
-      } catch (error) {
-        console.error('Failed to delete session:', error);
+
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'Do you want to delete this session?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await SessionRepository.deleteSession(sessionId);
+          fetchSessions();
+          Swal.fire('Deleted!', 'The session has been deleted.', 'success');
+        } catch (error) {
+          console.error('Failed to delete session:', error);
+          Swal.fire('Error!', 'Failed to delete the session.', 'error');
+        }
       }
-    }
+    });
   };
 
   const filteredSessions = (sessions).filter(session =>
@@ -66,12 +77,29 @@ const SessionsList: React.FC<ISessionsListProps> = ({
     
   //   if (diffInHours < 24) {
   //     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  //   } else if (diffInHours < 168) { // 7 days
+  //   } else if (diffInHours < 168) // 7 days
   //     return date.toLocaleDateString([], { weekday: 'short' });
   //   } else {
   //     return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
   //   }
   // };
+
+  useEffect(() => {
+    const handleFetchSessions = () => {
+      fetchSessions();
+    };
+
+    const sessionsListElement = document.querySelector('.sessions-list');
+    if (sessionsListElement) {
+      sessionsListElement.addEventListener('fetchSessions', handleFetchSessions);
+    }
+
+    return () => {
+      if (sessionsListElement) {
+        sessionsListElement.removeEventListener('fetchSessions', handleFetchSessions);
+      }
+    };
+  }, []);
 
   return (
     <div className="sessions-list">

@@ -20,7 +20,6 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
     const [isLoading, setIsLoading] = useState(true); // Track loading state for the page
 
     const getLatestChats = async (sessionId: string) => {
-        
             const response = await SessionRepository.getSessionChat(sessionId);
             if (response.ok) {
                 const items = await response.json();
@@ -68,12 +67,20 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
         setLatestChats(prev => [
             ...prev,
             {
-                question_id: "",
+                question_id: "", // Use a unique ID based on timestamp
                 question: '',
                 answer: ''
             }
         ]);
     };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>, question_id: string) => {
+        setLatestChats(prev =>
+            prev.map(chat =>
+                chat.question_id === question_id ? { ...chat, question: e.target.value } : chat
+            )
+        );
+    }
 
     const handleEdit = () => {
         setOpenDropdowns({}); // Close all dropdowns when entering edit mode
@@ -106,6 +113,33 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
             return { question_id, answer: `Failed to retrieve answer for question ${question_id}` };
         }
     };
+
+    const handleRun = async (chat: IChatLight) => {
+        setLoadingAnswers(prev => new Set([...prev, chat.question_id])); // Mark question as loading
+        const result = await getAnswerForQuestion(chat.question_id, chat.question);
+        setLatestChats(prev =>
+            prev.map(c =>
+                c.question_id === chat.question_id ? { ...c, question_id: result.question_id, answer: result.answer } : c
+            )
+        );      
+        setLoadingAnswers(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(chat.question_id); // Remove question from loading state
+            return newSet;
+        });
+        setOpenDropdowns(prev => ({ ...prev, [result.question_id]: true }));
+    }
+
+    const handleRemove = (question_id: string) => {
+        setLatestChats(prev =>
+            prev.filter(chat => chat.question_id !== question_id)
+        );
+        setOpenDropdowns(prev => {
+            const newOpen = { ...prev };
+            delete newOpen[question_id]; // Remove the dropdown state for the removed question
+            return newOpen;
+        });
+    }
 
     const handleDownload = () => {
         const items = latestChats.map((q, _) => ({
@@ -180,11 +214,7 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
                                 <input
                                     type="text"
                                     value={chat.question}
-                                    onChange={e => editMode && setLatestChats(prev =>
-                                        prev.map((c, i) =>
-                                            i === idx ? { ...c, question: e.target.value } : c
-                                        )
-                                    )}
+                                    onChange={(e) => handleChange(e, chat.question_id)}
                                     readOnly={!editMode}
                                     placeholder="Enter your question here"
                                     className="question-input"
@@ -213,35 +243,21 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
                             >
                                 {openDropdowns[chat.question_id] ? '▶' : '▼'}
                             </button>
+
                             <button
                                 type="button"
                                 className="run-btn"
                                 aria-label="Run to get answer"
                                 title="Run to get answer"
                                 disabled={!editMode || loadingAnswers.has(chat.question_id)}
-                                onClick={async () => {
-                                    setLoadingAnswers(prev => new Set([...prev, chat.question_id])); // Mark question as loading
-                                    const result = await getAnswerForQuestion(chat.question_id, chat.question);
-                                    setLatestChats(prev =>
-                                        prev.map((c, i) =>
-                                            i === idx ? { ...c, question_id: result.question_id, answer: result.answer } : c
-                                        )
-                                    );
-                                    setLoadingAnswers(prev => {
-                                        const newSet = new Set(prev);
-                                        newSet.delete(chat.question_id); // Remove question from loading state
-                                        return newSet;
-                                    });
-                                    setOpenDropdowns(prev => ({ ...prev, [result.question_id]: true })); // Open dropdown after loading
-                                }}
+                                onClick={() => handleRun(chat)}
                             >
                                 {loadingAnswers.has(chat.question_id) ? <Spinner size={16} /> : <FaPlay />}
                             </button>
+
                             {editMode && latestChats.length > 1 && (
                                 <button
-                                    onClick={() => setLatestChats(prev =>
-                                        prev.filter((_, i) => i !== idx)
-                                    )}
+                                    onClick={() => handleRemove(chat.question_id)}
                                     className="remove-question-btn"
                                     aria-label="Remove question"
                                     title="Remove question"
@@ -250,8 +266,7 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
                                 </button>
                             )}
                         </div>
-                    </div>
-                    
+                    </div>  
                 </div>
             ))}
             {editMode && (

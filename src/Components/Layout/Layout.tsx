@@ -28,6 +28,12 @@ const Layout: React.FC = () => {
   const handleActivitySelect = (session_id: string) => {
     setShowActivityPopup(false);
     setSelectedSessionId(session_id);
+    // Trigger fetchSessions in SessionsList
+    const sessionsListElement = document.querySelector('.sessions-list');
+    if (sessionsListElement) {
+      const fetchSessionsEvent = new CustomEvent('fetchSessions');
+      sessionsListElement.dispatchEvent(fetchSessionsEvent);
+    }
   };
 
   return (
