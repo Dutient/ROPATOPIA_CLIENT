@@ -10,12 +10,16 @@ import type { IChat } from '../../Models/IChat';
 import { FaPlay } from 'react-icons/fa'; // Import run/play icon
 import type { IChatLight } from '../../Models/IChatLight';
 import { LoadingSpinner } from '../../Components';
+import { FaHistory } from 'react-icons/fa'; // Import history icon
+import Swal from 'sweetalert2';
+import ReactDOMServer from 'react-dom/server';
 
 const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
 
     const [openDropdowns, setOpenDropdowns] = useState<{ [key: string]: boolean }>({});
     const [editMode, setEditMode] = useState(false);
     const [latestChats, setLatestChats] = useState<IChatLight[]>([]);
+    const [chatHistory, setChatHistory] = useState<{ [key: string]: IChat[] }>({});
     const [loadingAnswers, setLoadingAnswers] = useState<Set<string>>(new Set()); // Track loading states for specific questions
     const [isLoading, setIsLoading] = useState(true); // Track loading state for the page
 
@@ -33,6 +37,8 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
                         acc[chat.question_id].push(chat);
                         return acc;
                     }, {} as { [key: string]: IChat[] });
+
+                    setChatHistory(chatDictionary);
 
                     // Loop through the dictionary and get the latest question and answer
                     return Object.entries(chatDictionary).map(([question_id, chatList]) => {
@@ -188,6 +194,54 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
         XLSX.writeFile(workbook, "questions_and_answers.xlsx");
     };
 
+    const handleHistory = (question_id: string) => {
+        const history = chatHistory[question_id] || [];
+        if (history.length === 0) {
+            Swal.fire({
+                title: 'No History Found',
+                text: 'There is no history available for this question.',
+                icon: 'info',
+            });
+            return;
+        }
+
+        const MarkdownContent = () => (
+          <div style={{ textAlign: 'left', maxHeight: '400px', overflowY: 'auto' }}>
+            {history.map((item, index) => (
+              <div
+                key={index}
+                style={{
+                  backgroundColor: '#f9f9f9',
+                  padding: '15px',
+                  marginBottom: '10px',
+                  borderRadius: '5px',
+                  border: '1px solid #ddd',
+                }}
+              >
+                <strong style={{ color: '#333' }}>Question: {item.question}</strong>
+                <br></br>
+                <strong style={{ color: '#333', marginTop: '10px' }}>Answer:</strong>
+                <div style={{ marginTop: '5px', color: '#555' }}>
+                  <ReactMarkdown>{item.answer || 'No answer available'}</ReactMarkdown>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+
+        Swal.fire({
+            title: '<strong>History</strong>',
+            html: ReactDOMServer.renderToString(<MarkdownContent />),
+            width: '800px',
+            showCloseButton: true,
+            focusConfirm: false,
+            confirmButtonText: 'Close',
+            customClass: {
+                popup: 'history-swal-popup',
+            },
+        });
+    }
+
     if (isLoading) {
         return (
             <LoadingSpinner />
@@ -244,16 +298,18 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
                                 {openDropdowns[chat.question_id] ? '▶' : '▼'}
                             </button>
 
-                            <button
-                                type="button"
-                                className="run-btn"
-                                aria-label="Run to get answer"
-                                title="Run to get answer"
-                                disabled={!editMode || loadingAnswers.has(chat.question_id)}
-                                onClick={() => handleRun(chat)}
-                            >
-                                {loadingAnswers.has(chat.question_id) ? <Spinner size={16} /> : <FaPlay />}
-                            </button>
+                            {editMode && (
+                                <button
+                                    type="button"
+                                    className="run-btn"
+                                    aria-label="Run to get answer"
+                                    title="Run to get answer"
+                                    disabled={!editMode || loadingAnswers.has(chat.question_id)}
+                                    onClick={() => handleRun(chat)}
+                                >
+                                    {loadingAnswers.has(chat.question_id) ? <Spinner size={16} /> : <FaPlay />}
+                                </button>
+                            )}
 
                             {editMode && latestChats.length > 1 && (
                                 <button
@@ -263,6 +319,18 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
                                     title="Remove question"
                                 >
                                     ×
+                                </button>
+                            )}
+
+                            {!editMode && (
+                                <button
+                                    type="button"
+                                    className="history-btn"
+                                    aria-label="View history"
+                                    title="View history"
+                                    onClick={() => handleHistory(chat.question_id)} 
+                                >
+                                    <FaHistory />
                                 </button>
                             )}
                         </div>
