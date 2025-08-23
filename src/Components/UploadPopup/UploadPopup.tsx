@@ -138,7 +138,14 @@ const UploadPopup: React.FC<IUploadPopupProps> = ({
       alert('Please select an existing ROPA.');
       return;
     }
-    onUploadClick(selectedRopa, companyName);
+
+    const selectedRopaDetails = existingRopas.find((ropa) => ropa.batch_id === selectedRopa);
+    if (!selectedRopaDetails) {
+      alert('Selected ROPA not found.');
+      return;
+    }
+
+    onUploadClick(selectedRopa, selectedRopaDetails.company);
   };
 
   const handleUpload = async () => {
