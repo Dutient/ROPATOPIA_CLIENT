@@ -73,13 +73,15 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
     };
 
     const handleAdd = () => {
+        const question_id = crypto.randomUUID();
+
         setLatestChats(prev => [
             ...prev,
             {
-                question_id: "", // Use a unique ID based on timestamp
-                question: '',
-                answer: '',
-                feedback: null
+            question_id,
+            question: '',
+            answer: '',
+            feedback: null
             }
         ]);
     };
