@@ -52,4 +52,16 @@ export class IngestionRepository {
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
     return file.size <= maxSizeBytes;
   }
+
+  static async getAllRopas(): Promise<Response> {
+    try {
+      const response = await makeApiCall('/list/all-ropas', {
+        method: 'GET',
+      }, true);
+      return response;
+    } catch (error) {
+      console.error('Failed to fetch ROPAs:', error);
+      throw error;
+    }
+  }
 }

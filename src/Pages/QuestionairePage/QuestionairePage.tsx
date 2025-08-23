@@ -143,7 +143,7 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
         setShowFeedbackPopup(prev => ({ ...prev, [result.question_id]: false })); // Show feedback popup after getting answer
     }
 
-    const handleRemove = (question_id: string) => {
+    const handleRemove = async (question_id: string) => {
         setLatestChats(prev =>
             prev.filter(chat => chat.question_id !== question_id)
         );
@@ -152,6 +152,8 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
             delete newOpen[question_id]; // Remove the dropdown state for the removed question
             return newOpen;
         });
+
+        await SessionRepository.deleteQuestion(question_id, sessionId);
     }
 
     const handleDownload = () => {
