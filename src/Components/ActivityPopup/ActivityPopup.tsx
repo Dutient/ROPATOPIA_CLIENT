@@ -75,6 +75,7 @@ const ActivityPopup: React.FC<IActivityPopupProps> = ({
         onNext(result.session_id);
       }
     } catch (error) {
+      alert('Failed to create session. Please try again.');
       console.error('Error creating session:', error);
     } finally {
       setIsSubmitting(false);
