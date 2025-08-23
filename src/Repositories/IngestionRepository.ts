@@ -55,7 +55,7 @@ export class IngestionRepository {
 
   static async getAllRopas(): Promise<Response> {
     try {
-      const response = await makeApiCall('/list/all-ropas', {
+      const response = await makeApiCall('/list/all_ropas', {
         method: 'GET',
       }, true);
       return response;
