@@ -1,9 +1,10 @@
-interface RetrieveRequest {
+export interface RetrieveRequest {
     query: string;
-    batch_id?: string;
-    processing_activity: string[];
+    session_id: string;
+    question_id: string | null;
+    feedback: string | null; // Optional feedback field
 }
 
-interface BulkRetrieveRequest {
+export interface BulkRetrieveRequest {
     requests: RetrieveRequest[];
 }

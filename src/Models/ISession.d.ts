@@ -1,8 +1,8 @@
-interface ISession {
-    id: string;
-    title: string;
-    createdAt: string;
-    lastModified: string;
-    isActive?: boolean;
+export interface ISession {
+    session_id: string;
+    company_name: string;
+    processing_activities: string[];
+    isActive: boolean;
+    updated_at: string
   }
   

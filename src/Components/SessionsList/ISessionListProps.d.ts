@@ -1,6 +1,5 @@
-interface ISessionsListProps {
-    onSessionSelect?: (sessionId: string) => void;
+export interface ISessionsListProps {
     selectedSessionId?: string;
-    isVisible?: boolean;
-    onToggleVisibility?: () => void;
+    onSessionSelect?: (sessionId: string) => void;
+    onUploadClick?: () => void;
   }

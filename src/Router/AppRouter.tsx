@@ -1,11 +1,8 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../Contexts/AuthContext';
-import HomePage from '../Pages/HomePage/HomePage';
 import LoginPage from '../Pages/LoginPage/LoginPage';
-import UploadPage from '../Pages/UploadPage/UploadPage';
-import AcitivityPage from '../Pages/ActivityPage/ActivityPage';
-import QuestionairePage from '../Pages/QuestionairePage/QuestionairePage';
+import { Layout } from '../Components';
 
 // Protected Route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -32,22 +29,7 @@ const AppRouter: React.FC = () => {
       {/* Protected routes - require authentication */}
       <Route path="/" element={
         <ProtectedRoute>
-          <HomePage />
-        </ProtectedRoute>
-      } />
-      <Route path="/upload" element={
-        <ProtectedRoute>
-          <UploadPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/activity" element={
-        <ProtectedRoute>
-          <AcitivityPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/questionaire" element={
-        <ProtectedRoute>
-          <QuestionairePage />
+          <Layout />
         </ProtectedRoute>
       } />
       

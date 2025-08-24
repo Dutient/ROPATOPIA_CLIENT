@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { SessionRepository } from '../../Repositories/SessionRepository';
+import type { ISession } from '../../Models/ISession';
+import type { ISessionsListProps } from './ISessionListProps';
 import './Styles.css';
-
+import Swal from 'sweetalert2';
 
 const SessionsList: React.FC<ISessionsListProps> = ({
   onSessionSelect,
   selectedSessionId,
+  onUploadClick,
 }) => {
   const [sessions, setSessions] = useState<ISession[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showNewSessionForm, setShowNewSessionForm] = useState(false);
-  const [newSessionTitle, setNewSessionTitle] = useState('');
 
   useEffect(() => {
     fetchSessions();
@@ -21,17 +22,8 @@ const SessionsList: React.FC<ISessionsListProps> = ({
     try {
       setLoading(true);
       const response = await SessionRepository.fetchAllSessions();
-      
-      // Transform the string array into Session objects
-      const sessionObjects: ISession[] = response.sessions.map((sessionId: string, index: number) => ({
-        id: sessionId,
-        title: `Session ${index + 1}`,
-        createdAt: new Date().toISOString(), // You might want to get actual dates from your API
-        lastModified: new Date().toISOString(),
-        isActive: sessionId === selectedSessionId
-      }));
-      
-      setSessions(sessionObjects);
+      const activeSession = response.filter(session => session.isActive);
+      setSessions(activeSession);
     } catch (error) {
       console.error('Failed to fetch sessions:', error);
       setSessions([]);
@@ -46,61 +38,68 @@ const SessionsList: React.FC<ISessionsListProps> = ({
     }
   };
 
-  const handleCreateNewSession = async () => {
-    if (!newSessionTitle.trim()) return;
-    
-    try {
-      // Here you would typically call an API to create a new session
-      const newSession: ISession = {
-        id: `session-${Date.now()}`,
-        title: newSessionTitle,
-        createdAt: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
-        isActive: true
-      };
-      
-      setSessions(prev => [newSession, ...prev]);
-      setNewSessionTitle('');
-      setShowNewSessionForm(false);
-      
-      if (onSessionSelect) {
-        onSessionSelect(newSession.id);
-      }
-    } catch (error) {
-      console.error('Failed to create new session:', error);
-    }
-  };
-
   const handleDeleteSession = async (sessionId: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    
-    if (window.confirm('Are you sure you want to delete this session?')) {
-      try {
-        // Here you would typically call an API to delete the session
-        setSessions(prev => prev.filter(session => session.id !== sessionId));
-      } catch (error) {
-        console.error('Failed to delete session:', error);
+
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'Do you want to delete this session?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await SessionRepository.deleteSession(sessionId);
+          fetchSessions();
+          Swal.fire('Deleted!', 'The session has been deleted.', 'success');
+        } catch (error) {
+          console.error('Failed to delete session:', error);
+          Swal.fire('Error!', 'Failed to delete the session.', 'error');
+        }
       }
-    }
+    });
   };
 
-  const filteredSessions = sessions.filter(session =>
-    session.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSessions = (sessions).filter(session =>
+    session.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    session.processing_activities.some((activity: string) => 
+      activity.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+  // const formatDate = (dateString: string) => {
+  //   const date = new Date(dateString);
+  //   const now = new Date();
+  //   const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
     
-    if (diffInHours < 24) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (diffInHours < 168) { // 7 days
-      return date.toLocaleDateString([], { weekday: 'short' });
-    } else {
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  //   if (diffInHours < 24) {
+  //     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  //   } else if (diffInHours < 168) // 7 days
+  //     return date.toLocaleDateString([], { weekday: 'short' });
+  //   } else {
+  //     return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  //   }
+  // };
+
+  useEffect(() => {
+    const handleFetchSessions = () => {
+      fetchSessions();
+    };
+
+    const sessionsListElement = document.querySelector('.sessions-list');
+    if (sessionsListElement) {
+      sessionsListElement.addEventListener('fetchSessions', handleFetchSessions);
     }
-  };
+
+    return () => {
+      if (sessionsListElement) {
+        sessionsListElement.removeEventListener('fetchSessions', handleFetchSessions);
+      }
+    };
+  }, []);
 
   return (
     <div className="sessions-list">
@@ -111,7 +110,7 @@ const SessionsList: React.FC<ISessionsListProps> = ({
         
         <button 
           className="new-session-button"
-          onClick={() => setShowNewSessionForm(true)}
+          onClick={onUploadClick}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 5v14M5 12h14"/>
@@ -119,37 +118,6 @@ const SessionsList: React.FC<ISessionsListProps> = ({
           New Session
         </button>
       </div>
-
-      {showNewSessionForm && (
-        <div className="new-session-form">
-          <input
-            type="text"
-            placeholder="Enter session title..."
-            value={newSessionTitle}
-            onChange={(e) => setNewSessionTitle(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleCreateNewSession()}
-            autoFocus
-          />
-          <div className="form-actions">
-            <button 
-              className="create-button"
-              onClick={handleCreateNewSession}
-              disabled={!newSessionTitle.trim()}
-            >
-              Create
-            </button>
-            <button 
-              className="cancel-button"
-              onClick={() => {
-                setShowNewSessionForm(false);
-                setNewSessionTitle('');
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
 
       <div className="search-container">
         <div className="search-input-wrapper">
@@ -159,7 +127,7 @@ const SessionsList: React.FC<ISessionsListProps> = ({
           </svg>
           <input
             type="text"
-            placeholder="Search sessions..."
+            placeholder="Search by company name or processing activities..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
@@ -202,21 +170,34 @@ const SessionsList: React.FC<ISessionsListProps> = ({
           <div className="sessions-list-items">
             {filteredSessions.map((session) => (
               <div
-                key={session.id}
-                className={`session-item ${session.id === selectedSessionId ? 'active' : ''}`}
-                onClick={() => handleSessionClick(session.id)}
+                key={session.session_id}
+                className={`session-item ${session.session_id === selectedSessionId ? 'active' : ''}`}
+                onClick={() => handleSessionClick(session.session_id)}
               >
                 <div className="session-content">
-                  <div className="session-title">{session.title}</div>
+                  <div className="session-title">{session.company_name}</div>
                   <div className="session-meta">
-                    <span className="session-date">
-                      {formatDate(session.lastModified)}
-                    </span>
+                    <div className="processing-activities">
+                      {session.processing_activities.length > 0 ? (
+                        session.processing_activities.slice(0, 3).map((activity: string, index: number) => (
+                          <span key={index} className="activity-tag">
+                            {activity}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="no-activities">No processing activities</span>
+                      )}
+                      {session.processing_activities.length > 3 && (
+                        <span className="more-activities">
+                          +{session.processing_activities.length - 3} more
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <button
                   className="delete-session-button"
-                  onClick={(e) => handleDeleteSession(session.id, e)}
+                  onClick={(e) => handleDeleteSession(session.session_id, e)}
                   title="Delete session"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
