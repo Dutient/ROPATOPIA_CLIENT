@@ -78,12 +78,24 @@ export class SessionRepository {
 
   static async deleteSession(session_id: string): Promise<Response> {
     try {
-      const response = await makeApiCall(`/session/${session_id}`, {
+      const response = await makeApiCall(`/delete/session/${session_id}`, {
         method: 'DELETE',
       }, true);
       return response;
     } catch (error) {
       console.error('Failed to delete session:', error);
+      throw error;
+    }
+  }
+
+  static async deleteQuestion(question_id: string, session_id: string): Promise<Response> {
+    try {
+      const response = await makeApiCall(`/delete_question/${question_id}?session_id=${session_id}`, {
+        method: 'DELETE',
+      }, true);
+      return response;
+    } catch (error) {
+      console.error('Failed to delete question:', error);
       throw error;
     }
   }

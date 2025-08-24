@@ -10,17 +10,22 @@ import type { IChat } from '../../Models/IChat';
 import { FaPlay } from 'react-icons/fa'; // Import run/play icon
 import type { IChatLight } from '../../Models/IChatLight';
 import { LoadingSpinner } from '../../Components';
+import { FaHistory } from 'react-icons/fa'; // Import history icon
+import { FaCommentDots } from 'react-icons/fa'; // Import feedback icon
+import Swal from 'sweetalert2';
+import ReactDOMServer from 'react-dom/server';
 
 const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
 
     const [openDropdowns, setOpenDropdowns] = useState<{ [key: string]: boolean }>({});
+    const [showFeedbackPopup, setShowFeedbackPopup] = useState<{ [key: string]: boolean }>({});
     const [editMode, setEditMode] = useState(false);
     const [latestChats, setLatestChats] = useState<IChatLight[]>([]);
+    const [chatHistory, setChatHistory] = useState<{ [key: string]: IChat[] }>({});
     const [loadingAnswers, setLoadingAnswers] = useState<Set<string>>(new Set()); // Track loading states for specific questions
     const [isLoading, setIsLoading] = useState(true); // Track loading state for the page
 
     const getLatestChats = async (sessionId: string) => {
-        
             const response = await SessionRepository.getSessionChat(sessionId);
             if (response.ok) {
                 const items = await response.json();
@@ -35,6 +40,8 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
                         return acc;
                     }, {} as { [key: string]: IChat[] });
 
+                    setChatHistory(chatDictionary);
+
                     // Loop through the dictionary and get the latest question and answer
                     return Object.entries(chatDictionary).map(([question_id, chatList]) => {
                         const latestChat = chatList.reduce((latest, current) =>
@@ -43,7 +50,8 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
                         return {
                             question_id,
                             question: latestChat.question,
-                            answer: latestChat.answer
+                            answer: latestChat.answer,
+                            feedback: null
                         };
                     });
                 }
@@ -65,18 +73,30 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
     };
 
     const handleAdd = () => {
+        const question_id = crypto.randomUUID();
+
         setLatestChats(prev => [
             ...prev,
             {
-                question_id: "",
-                question: '',
-                answer: ''
+            question_id,
+            question: '',
+            answer: '',
+            feedback: null
             }
         ]);
     };
 
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>, question_id: string) => {
+        setLatestChats(prev =>
+            prev.map(chat =>
+                chat.question_id === question_id ? { ...chat, question: e.target.value } : chat
+            )
+        );
+    }
+
     const handleEdit = () => {
-        setOpenDropdowns({}); // Close all dropdowns when entering edit mode
+        setOpenDropdowns({});
+        setShowFeedbackPopup({});
         setEditMode(prev => {
             const newEditMode = !prev;
             if (!newEditMode) {
@@ -92,11 +112,12 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
         });
     };
 
-    const getAnswerForQuestion = async (question_id: string, query: string) => {
+    const getAnswerForQuestion = async (question_id: string, query: string, feedback: string | null) => {
         const payload: RetrieveRequest = {
             query: query,
             session_id: sessionId,
             question_id: question_id || "",
+            feedback: feedback || ""
         };
         const response = await GeneratePIARepository.generatePia(payload);
         if (response.ok) {
@@ -106,6 +127,36 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
             return { question_id, answer: `Failed to retrieve answer for question ${question_id}` };
         }
     };
+
+    const handleRun = async (chat: IChatLight) => {
+        setLoadingAnswers(prev => new Set([...prev, chat.question_id])); // Mark question as loading
+        const result = await getAnswerForQuestion(chat.question_id, chat.question, chat.feedback);
+        setLatestChats(prev =>
+            prev.map(c =>
+                c.question_id === chat.question_id ? { ...c, question_id: result.question_id, answer: result.answer } : c
+            )
+        );      
+        setLoadingAnswers(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(chat.question_id); // Remove question from loading state
+            return newSet;
+        });
+        setOpenDropdowns(prev => ({ ...prev, [result.question_id]: true }));
+        setShowFeedbackPopup(prev => ({ ...prev, [result.question_id]: false })); // Show feedback popup after getting answer
+    }
+
+    const handleRemove = async (question_id: string) => {
+        setLatestChats(prev =>
+            prev.filter(chat => chat.question_id !== question_id)
+        );
+        setOpenDropdowns(prev => {
+            const newOpen = { ...prev };
+            delete newOpen[question_id]; // Remove the dropdown state for the removed question
+            return newOpen;
+        });
+
+        await SessionRepository.deleteQuestion(question_id, sessionId);
+    }
 
     const handleDownload = () => {
         const items = latestChats.map((q, _) => ({
@@ -154,6 +205,60 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
         XLSX.writeFile(workbook, "questions_and_answers.xlsx");
     };
 
+    const handleHistory = (question_id: string) => {
+        const history = chatHistory[question_id] || [];
+        if (history.length === 0) {
+            Swal.fire({
+                title: 'No History Found',
+                text: 'There is no history available for this question.',
+                icon: 'info',
+            });
+            return;
+        }
+
+        const MarkdownContent = () => (
+          <div style={{ textAlign: 'left', maxHeight: '400px', overflowY: 'auto' }}>
+            {history.map((item, index) => (
+              <div
+                key={index}
+                style={{
+                  backgroundColor: '#f9f9f9',
+                  padding: '15px',
+                  marginBottom: '10px',
+                  borderRadius: '5px',
+                  border: '1px solid #ddd',
+                }}
+              >
+                <strong style={{ color: '#333' }}>Question: {item.question}</strong>
+                <br></br>
+                <strong style={{ color: '#333', marginTop: '10px' }}>Answer:</strong>
+                <div style={{ marginTop: '5px', color: '#555' }}>
+                  <ReactMarkdown>{item.answer || 'No answer available'}</ReactMarkdown>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+
+        Swal.fire({
+            title: '<strong>History</strong>',
+            html: ReactDOMServer.renderToString(<MarkdownContent />),
+            width: '800px',
+            showCloseButton: true,
+            focusConfirm: false,
+            confirmButtonText: 'Close',
+            customClass: {
+                popup: 'history-swal-popup',
+            },
+        });
+    }
+
+    const toggleFeedback = (question_id: string) => {
+        setShowFeedbackPopup(prev => ({ ...prev, [question_id]: !prev[question_id] }));
+    }
+    
+
+
     if (isLoading) {
         return (
             <LoadingSpinner />
@@ -180,11 +285,7 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
                                 <input
                                     type="text"
                                     value={chat.question}
-                                    onChange={e => editMode && setLatestChats(prev =>
-                                        prev.map((c, i) =>
-                                            i === idx ? { ...c, question: e.target.value } : c
-                                        )
-                                    )}
+                                    onChange={(e) => handleChange(e, chat.question_id)}
                                     readOnly={!editMode}
                                     placeholder="Enter your question here"
                                     className="question-input"
@@ -194,13 +295,31 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
                                 <div className="answer-dropdown">
                                     <strong>Answer:</strong>
                                     <div style={{ marginTop: 4 }}>
-                                        {chat.answer ? (
-                                            <ReactMarkdown>{chat.answer}</ReactMarkdown>
-                                        ) : (
-                                            <em>No answer available.</em>
-                                        )}
+                                      {chat.answer ? (
+                                        <ReactMarkdown>{chat.answer}</ReactMarkdown>
+                                      ) : (
+                                        <em>No answer available.</em>
+                                      )}
                                     </div>
                                 </div>
+                            )}
+                            {editMode && showFeedbackPopup[chat.question_id] && (
+                              <div className="feedback-popup">
+                                <textarea
+                                  className="feedback-textarea"
+                                  placeholder="Enter your feedback here..."
+                                  value={chat.feedback || ''}
+                                  onChange={(e) =>
+                                    setLatestChats((prev) =>
+                                      prev.map((c) =>
+                                        c.question_id === chat.question_id
+                                          ? { ...c, feedback: e.target.value }
+                                          : c
+                                      )
+                                    )
+                                  }
+                                />
+                              </div>
                             )}
                         </div>
                         <div className="question-actions">
@@ -213,45 +332,56 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
                             >
                                 {openDropdowns[chat.question_id] ? '▶' : '▼'}
                             </button>
-                            <button
-                                type="button"
-                                className="run-btn"
-                                aria-label="Run to get answer"
-                                title="Run to get answer"
-                                disabled={!editMode || loadingAnswers.has(chat.question_id)}
-                                onClick={async () => {
-                                    setLoadingAnswers(prev => new Set([...prev, chat.question_id])); // Mark question as loading
-                                    const result = await getAnswerForQuestion(chat.question_id, chat.question);
-                                    setLatestChats(prev =>
-                                        prev.map((c, i) =>
-                                            i === idx ? { ...c, question_id: result.question_id, answer: result.answer } : c
-                                        )
-                                    );
-                                    setLoadingAnswers(prev => {
-                                        const newSet = new Set(prev);
-                                        newSet.delete(chat.question_id); // Remove question from loading state
-                                        return newSet;
-                                    });
-                                    setOpenDropdowns(prev => ({ ...prev, [result.question_id]: true })); // Open dropdown after loading
-                                }}
-                            >
-                                {loadingAnswers.has(chat.question_id) ? <Spinner size={16} /> : <FaPlay />}
-                            </button>
-                            {editMode && latestChats.length > 1 && (
+
+                            {editMode && (
                                 <button
-                                    onClick={() => setLatestChats(prev =>
-                                        prev.filter((_, i) => i !== idx)
-                                    )}
-                                    className="remove-question-btn"
-                                    aria-label="Remove question"
-                                    title="Remove question"
+                                    type="button"
+                                    className="run-btn"
+                                    aria-label="Run to get answer"
+                                    title="Run to get answer"
+                                    disabled={!editMode || loadingAnswers.has(chat.question_id)}
+                                    onClick={() => handleRun(chat)}
                                 >
-                                    ×
+                                    {loadingAnswers.has(chat.question_id) ? <Spinner size={16} /> : <FaPlay />}
+                                </button>
+                            )}
+
+                            {editMode && latestChats.length > 1 && (
+                                <>
+                                    <button
+                                        type="button"
+                                        className="feedback-btn"
+                                        aria-label="Add feedback"
+                                        title="Add feedback"
+                                        disabled={chat.answer === ''}
+                                        onClick={() => toggleFeedback(chat.question_id)}
+                                    >
+                                        <FaCommentDots />
+                                    </button>
+                                    <button
+                                        onClick={() => handleRemove(chat.question_id)}
+                                        className="remove-question-btn"
+                                        aria-label="Remove question"
+                                        title="Remove question"
+                                    >
+                                        ×
+                                    </button>
+                                </>
+                            )}
+
+                            {!editMode && (
+                                <button
+                                        type="button"
+                                        className="history-btn"
+                                        aria-label="View history"
+                                        title="View history"
+                                        onClick={() => handleHistory(chat.question_id)}
+                                    >
+                                        <FaHistory />
                                 </button>
                             )}
                         </div>
-                    </div>
-                    
+                    </div>  
                 </div>
             ))}
             {editMode && (

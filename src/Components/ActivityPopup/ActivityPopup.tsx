@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './Styles.css';
 import type { IActivityPopupProps } from './IActivityProps';
 import { SessionRepository } from '../../Repositories/SessionRepository';
+import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
+import Spinner from '../Spinner/Spinner';
 
 const ActivityPopup: React.FC<IActivityPopupProps> = ({
   batchId,
@@ -10,6 +12,8 @@ const ActivityPopup: React.FC<IActivityPopupProps> = ({
 }) => {
   const [checkboxes, setCheckboxes] = useState<{ label: string; checked: boolean }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSubmittingMessage, setShowSubmittingMessage] = useState(false);
 
   useEffect(() => {
     if (batchId) {
@@ -63,6 +67,13 @@ const ActivityPopup: React.FC<IActivityPopupProps> = ({
       alert('Please select an activity.');
       return;
     } 
+    setIsSubmitting(true);
+    setShowSubmittingMessage(false);
+
+    // Show the message after 2-3 seconds
+    setTimeout(() => {
+      setShowSubmittingMessage(true);
+    }, 2000);
 
     try {
       const response = await SessionRepository.createSession(batchId, selectedActivities, companyName);
@@ -72,7 +83,11 @@ const ActivityPopup: React.FC<IActivityPopupProps> = ({
         onNext(result.session_id);
       }
     } catch (error) {
+      alert('Failed to create session. Please try again.');
       console.error('Error creating session:', error);
+    } finally {
+      setIsSubmitting(false);
+      setShowSubmittingMessage(false);
     }
   };
 
@@ -86,10 +101,7 @@ const ActivityPopup: React.FC<IActivityPopupProps> = ({
 
       <div className="activity-content">
         {isLoading ? (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <span>Loading activities...</span>
-          </div>
+          <LoadingSpinner />
         ) : (
           checkboxes.length === 0 ? (
             <span>No activity found</span>
@@ -112,13 +124,22 @@ const ActivityPopup: React.FC<IActivityPopupProps> = ({
           )
         )}
         <div className="activity-actions">
-          <button
-            className="activity-next-btn"
-            onClick={handleNext}
-            disabled={isLoading || checkboxes.filter(cb => cb.checked).length === 0}
-          >
-            {isLoading ? 'Loading...' : 'Continue'}
-          </button>
+          <div>
+            <button
+              className="activity-next-btn"
+              onClick={handleNext}
+              disabled={isLoading || checkboxes.filter(cb => cb.checked).length === 0 || isSubmitting}
+            >
+              {isSubmitting ? <Spinner size={16} /> : 'Continue'}
+            </button>
+          </div>
+          {showSubmittingMessage && (
+            <div className="submitting-message-container">
+              <p className="submitting-message">
+                This may take 1-2 minutes. Please do not close the page.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
