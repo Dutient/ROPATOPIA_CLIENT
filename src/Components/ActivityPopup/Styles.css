@@ -144,6 +144,8 @@
 
 .activity-actions {
   display: flex;
+  flex-direction: column;
+  text-align: center;
   gap: 16px;
   justify-content: center;
   margin-top: 16px;
@@ -232,4 +234,13 @@
   .checkboxes-section {
     max-height: 250px;
   }
+}
+
+.submitting-message-container {
+  text-align: center;
+}
+
+.submitting-message {
+  font-size: 14px;
+  color: #555;
 }

@@ -288,7 +288,7 @@ const UploadPopup: React.FC<IUploadPopupProps> = ({
               <div className="click-here">or click here to browse</div>
             )}
             <div className="upload-hint">
-              Supports PDF, XLSX, and CSV files
+              Supports XLSX and CSV files
             </div>
             <input
               ref={fileInputRef}
