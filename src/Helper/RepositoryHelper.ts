@@ -4,7 +4,7 @@ export async function makeApiCall(
   options: RequestInit = {}, 
   requireAuth: boolean
 ): Promise<Response> {
-  const baseUrl = 'http://localhost:8000';
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
   const url = `${baseUrl}${endpoint}`;
   
   // Get JWT token from localStorage if authentication is required
