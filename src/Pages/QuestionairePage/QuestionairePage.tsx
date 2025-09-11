@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { GeneratePIARepository } from '../../Repositories/GeneratePIARepository';
 import Spinner from '../../Components/Spinner/Spinner';
@@ -59,12 +59,14 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
             return new Array<IChatLight>(); // Return an empty array if no chats are found
     };
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         (async () => {
             setIsLoading(true);
-            const latestChatsData = await getLatestChats(sessionId);
-            setLatestChats(latestChatsData);
-            setIsLoading(false);
+            const latestChats = await getLatestChats(sessionId);
+            setLatestChats(latestChats);
+            if(latestChats.length !== 0) {
+                setIsLoading(false);
+            }
         })();
     }, [sessionId]);
 

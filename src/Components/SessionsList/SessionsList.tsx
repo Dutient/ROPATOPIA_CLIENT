@@ -9,6 +9,7 @@ const SessionsList: React.FC<ISessionsListProps> = ({
   onSessionSelect,
   selectedSessionId,
   onUploadClick,
+  refreshTrigger
 }) => {
   const [sessions, setSessions] = useState<ISession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,21 +86,8 @@ const SessionsList: React.FC<ISessionsListProps> = ({
   // };
 
   useEffect(() => {
-    const handleFetchSessions = () => {
-      fetchSessions();
-    };
-
-    const sessionsListElement = document.querySelector('.sessions-list');
-    if (sessionsListElement) {
-      sessionsListElement.addEventListener('fetchSessions', handleFetchSessions);
-    }
-
-    return () => {
-      if (sessionsListElement) {
-        sessionsListElement.removeEventListener('fetchSessions', handleFetchSessions);
-      }
-    };
-  }, []);
+    fetchSessions();
+  }, [refreshTrigger]);
 
   return (
     <div className="sessions-list">

@@ -13,6 +13,7 @@ const Layout: React.FC = () => {
   const [showActivityPopup, setShowActivityPopup] = useState(false);
   const [batchId, setBatchId] = useState("");
   const [company_name, setCompany_name] = useState("");
+  const [trigger, setTrigger] = useState(false); // State to trigger refresh in SessionsList
 
   const handleSessionSelect = (sessionId: string) => {
     setSelectedSessionId(sessionId);
@@ -28,12 +29,7 @@ const Layout: React.FC = () => {
   const handleActivitySelect = (session_id: string) => {
     setShowActivityPopup(false);
     setSelectedSessionId(session_id);
-    // Trigger fetchSessions in SessionsList
-    const sessionsListElement = document.querySelector('.sessions-list');
-    if (sessionsListElement) {
-      const fetchSessionsEvent = new CustomEvent('fetchSessions');
-      sessionsListElement.dispatchEvent(fetchSessionsEvent);
-    }
+    setTrigger(!trigger);
   };
 
   return (
@@ -42,6 +38,7 @@ const Layout: React.FC = () => {
         selectedSessionId={selectedSessionId}
         onSessionSelect={handleSessionSelect}
         onUploadClick={() => setShowUploadPopup(true)}
+        refreshTrigger={trigger}
       />
       
       <div className="main-content with-sidebar">
