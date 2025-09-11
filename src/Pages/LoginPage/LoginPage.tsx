@@ -11,7 +11,6 @@ const LoginPage: React.FC = () => {
   const { login, signup, isAuthenticated } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
 
   // Form states
@@ -41,46 +40,57 @@ const LoginPage: React.FC = () => {
     // Clear validation error when user starts typing
     if (validationErrors[name]) {
       setValidationErrors(prev => ({ ...prev, [name]: '' }));
+      return false;
     }
   };
 
   const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
 
     // Email validation for signup
     if (!isLogin && !formData.email) {
-      errors.email = 'Email is required';
+      setValidationErrors(prev => ({ ...prev, email: 'Email is required' }));
+      return false;
     } else if (!isLogin && formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Please enter a valid email address';
+      setValidationErrors(prev => ({ ...prev, email: 'Invalid email format' }));
+      return false;
+    } else if (!isLogin && formData.email && !formData.email.endsWith('@dutient.ai')) {
+      setValidationErrors(prev => ({ ...prev, email: 'User must be a part of the Organization' }));
+      return false;
     }
 
     // Username validation for login
     if (isLogin && !formData.username) {
-      errors.username = 'Username is required';
+      setValidationErrors(prev => ({ ...prev, username: 'Username is required' }));
+      return false;
+    } else if (formData.username && !formData.username.endsWith('@dutient.ai')) {
+      setValidationErrors(prev => ({ ...prev, username: 'User must be a part of the Organization' }));
+      return false;
     }
 
     // Password validation
     if (!formData.password) {
-      errors.password = 'Password is required';
+      setValidationErrors(prev => ({ ...prev, password: 'Password is required' }));
+      return false;
     } else if (formData.password.length < 8) {
-      errors.password = 'Password must be at least 8 characters long';
+      setValidationErrors(prev => ({ ...prev, password: 'Password must be at least 8 characters long' }));
+      return false;
     } else if (!/(?=.*[a-z])/.test(formData.password)) {
-      errors.password = 'Password must contain at least one lowercase letter';
+      setValidationErrors(prev => ({ ...prev, password: 'Password must contain at least one lowercase letter' }));
+      return false;
     } else if (!/(?=.*[A-Z])/.test(formData.password)) {
-      errors.password = 'Password must contain at least one uppercase letter';
+      setValidationErrors(prev => ({ ...prev, password: 'Password must contain at least one uppercase letter' }));
+      return false;
     }
 
     // Additional validation for signup
     if (!isLogin) {
       if (!formData.name) {
-        errors.name = 'Full name is required';
+        setValidationErrors(prev => ({ ...prev, name: 'Full name is required' }));
+        return false;
       }
     }
 
-    setValidationErrors(errors);
-    const isValid = Object.keys(errors).length === 0;
-    console.log('Form validation result:', isValid, 'Errors:', errors);
-    return isValid;
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,7 +106,6 @@ const LoginPage: React.FC = () => {
 
     try {
       // Clear previous messages before attempting login/signup
-      setError('');
       setSuccess('');
       
       if (isLogin) {
@@ -123,8 +132,7 @@ const LoginPage: React.FC = () => {
       }
     } catch (err) {
       // Use the specific error messages from the repository
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
-      setError(errorMessage);
+      console.log('Error during authentication:', err);
     } finally {
       setLoading(false);
     }
@@ -134,7 +142,6 @@ const LoginPage: React.FC = () => {
     setIsLogin(!isLogin);
     setFormData({ username: '', name: '', email: '', password: '' });
     setValidationErrors({});
-    setError('');
     setSuccess('');
   };
 
@@ -211,7 +218,6 @@ const LoginPage: React.FC = () => {
              )}
            </button>
 
-           {error && <div className="error-alert">{error}</div>}
            {success && <div className="success-alert">{success}</div>}
         </form>
 
