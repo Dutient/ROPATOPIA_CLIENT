@@ -12,8 +12,11 @@ import type { IChatLight } from '../../Models/IChatLight';
 import { LoadingSpinner } from '../../Components';
 import { FaHistory } from 'react-icons/fa'; // Import history icon
 import { FaCommentDots } from 'react-icons/fa'; // Import feedback icon
+import { FaTrash, FaTimes } from 'react-icons/fa'; // Import delete and close icons
 import Swal from 'sweetalert2';
 import ReactDOMServer from 'react-dom/server';
+import { KnowledgeRepository } from '../../Repositories/KnowledgeRepository';
+import type { knowledge_text, Knowledge_Item } from '../../Models/IKnowledge';
 
 const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
 
@@ -24,6 +27,13 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
     const [chatHistory, setChatHistory] = useState<{ [key: string]: IChat[] }>({});
     const [loadingAnswers, setLoadingAnswers] = useState<Set<string>>(new Set()); // Track loading states for specific questions
     const [isLoading, setIsLoading] = useState(true); // Track loading state for the page
+    const [showContextPopup, setShowContextPopup] = useState(false);
+    const [knowledgeItems, setKnowledgeItems] = useState<Knowledge_Item[]>([]);
+    const [loadingKnowledge, setLoadingKnowledge] = useState(false);
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [addFormData, setAddFormData] = useState<knowledge_text>({ title: '', content: '' });
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [savingKnowledge, setSavingKnowledge] = useState(false);
 
     const getLatestChats = async (sessionId: string) => {
             const response = await SessionRepository.getSessionChat(sessionId);
@@ -112,6 +122,137 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
             }
             return newEditMode;
         });
+    };
+
+    const fetchKnowledgeItems = async () => {
+        try {
+            setLoadingKnowledge(true);
+            const response = await KnowledgeRepository.fetchKnowledgeBySession(sessionId);
+            setKnowledgeItems(response.knowledge_items || []);
+        } catch (error) {
+            console.error('Failed to fetch knowledge items:', error);
+            setKnowledgeItems([]);
+        } finally {
+            setLoadingKnowledge(false);
+        }
+    };
+
+    const handleAddContext = async () => {
+        setShowContextPopup(true);
+        await fetchKnowledgeItems();
+    };
+
+    const handleCloseContextPopup = () => {
+        setShowContextPopup(false);
+        setKnowledgeItems([]);
+        setShowAddForm(false);
+        setAddFormData({ title: '', content: '' });
+        setSelectedFile(null);
+    };
+
+    const handleShowAddForm = () => {
+        setShowAddForm(true);
+    };
+
+    const handleCancelAdd = () => {
+        setShowAddForm(false);
+        setAddFormData({ title: '', content: '' });
+        setSelectedFile(null);
+    };
+
+    const handleAddFormChange = (field: 'title' | 'content', value: string) => {
+        setAddFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] || null;
+        setSelectedFile(file);
+    };
+
+    const handleSaveKnowledge = async () => {
+        const hasTextData = addFormData.title.trim() || addFormData.content.trim();
+        const hasFileData = selectedFile;
+
+        if (!hasTextData && !hasFileData) {
+            Swal.fire({
+                title: 'No Data',
+                text: 'Please provide either text content or upload a file.',
+                icon: 'warning'
+            });
+            return;
+        }
+
+        try {
+            setSavingKnowledge(true);
+            const promises = [];
+
+            // Add text knowledge if text fields have content
+            if (hasTextData) {
+                const textPayload = {
+                    title: addFormData.title.trim() || 'Untitled',
+                    content: addFormData.content.trim() || ''
+                };
+                promises.push(KnowledgeRepository.addKnowledgeText(sessionId, textPayload));
+            }
+
+            // Add file knowledge if file is selected
+            if (hasFileData) {
+                promises.push(KnowledgeRepository.addKnowledgeFile(sessionId, selectedFile));
+            }
+
+            await Promise.all(promises);
+
+            // Refresh knowledge items
+            await fetchKnowledgeItems();
+
+            // Reset form
+            handleCancelAdd();
+
+            Swal.fire({
+                title: 'Success!',
+                text: `Knowledge ${promises.length > 1 ? 'items' : 'item'} added successfully.`,
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+        } catch (error) {
+            console.error('Failed to save knowledge:', error);
+            Swal.fire({
+                title: 'Error',
+                text: 'Failed to save knowledge. Please try again.',
+                icon: 'error'
+            });
+        } finally {
+            setSavingKnowledge(false);
+        }
+    };
+
+    const handleDeleteKnowledgeItem = async (knowledgeId: string) => {
+        try {
+            await KnowledgeRepository.deleteKnowledge(sessionId, knowledgeId);
+            // Remove the deleted item from the local state
+            setKnowledgeItems(prev => prev.filter(item => item.id !== knowledgeId));
+            
+            // Show success message
+            Swal.fire({
+                title: 'Deleted!',
+                text: 'Knowledge item has been deleted.',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } catch (error) {
+            console.error('Failed to delete knowledge item:', error);
+            Swal.fire({
+                title: 'Error',
+                text: 'Failed to delete knowledge item. Please try again.',
+                icon: 'error'
+            });
+        }
     };
 
     const getAnswerForQuestion = async (question_id: string, query: string, feedback: string | null) => {
@@ -271,12 +412,20 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
         <div className="questions-section">
             <div className="title-edit-container">
                 <h3 className='questions-title'>PIA</h3>
-                <button
-                    className="edit-btn"
-                    onClick={handleEdit}
-                >
-                    {editMode ? 'Done' : 'Edit'}
-                </button>
+                <div className="button-group">
+                    <button
+                        className="add-context-btn"
+                        onClick={handleAddContext}
+                    >
+                        Add Context
+                    </button>
+                    <button
+                        className="edit-btn"
+                        onClick={handleEdit}
+                    >
+                        {editMode ? 'Done' : 'Edit'}
+                    </button>
+                </div>
             </div>
             {latestChats.map((chat, idx) => (
                 <div key={chat.question_id} className="question-container">
@@ -407,6 +556,162 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
                     >
                         Download Q&A
                     </button>
+                </div>
+            )}
+
+            {/* Context Popup Modal */}
+            {showContextPopup && (
+                <div className="context-popup-overlay" onClick={handleCloseContextPopup}>
+                    <div className="context-popup" onClick={(e) => e.stopPropagation()}>
+                        <div className="context-popup-header">
+                            <h3>Knowledge Base</h3>
+                            <button 
+                                className="context-close-btn"
+                                onClick={handleCloseContextPopup}
+                                aria-label="Close popup"
+                            >
+                                <FaTimes />
+                            </button>
+                        </div>
+                        
+                        <div className="context-popup-content">
+                            {!showAddForm ? (
+                                <>
+                                    <div className="context-actions">
+                                        <button
+                                            className="add-knowledge-btn"
+                                            onClick={handleShowAddForm}
+                                        >
+                                            Add Context
+                                        </button>
+                                    </div>
+                                    
+                                    {loadingKnowledge ? (
+                                        <div className="context-loading">
+                                            <Spinner size={24} />
+                                            <p>Loading Context items...</p>
+                                        </div>
+                                    ) : knowledgeItems.length === 0 ? (
+                                        <div className="no-knowledge-items">
+                                            <p>No Context items found for this session.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="knowledge-items-grid">
+                                            {knowledgeItems.map((item) => (
+                                                <div key={item.id} className="knowledge-item-card">
+                                                    <div className="knowledge-item-header">
+                                                        <h4 className="knowledge-item-title">{item.title}</h4>
+                                                        <button
+                                                            className="knowledge-delete-btn"
+                                                            onClick={() => handleDeleteKnowledgeItem(item.id)}
+                                                            aria-label="Delete Context item"
+                                                            title="Delete Context item"
+                                                        >
+                                                            <FaTrash />
+                                                        </button>
+                                                    </div>
+                                                    <div className="knowledge-item-details">
+                                                        <span className="knowledge-item-meta">
+                                                            <strong>Type:</strong> {item.content_type}
+                                                        </span>
+                                                        {item.original_filename && (
+                                                            <span className="knowledge-item-meta">
+                                                                <strong>File:</strong> {item.original_filename}
+                                                            </span>
+                                                        )}
+                                                        <span className={`knowledge-item-status ${item.status.toLowerCase()}`}>
+                                                            <strong>Status:</strong> {item.status}
+                                                        </span>
+                                                        {item.error_message && (
+                                                            <span className="knowledge-item-error">
+                                                                <strong>Error:</strong> {item.error_message}
+                                                            </span>
+                                                        )}
+                                                        <span className="knowledge-item-date">
+                                                            <strong>Created:</strong> {new Date(item.created_at).toLocaleDateString()}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </> 
+                            ) : (
+                                <div className="add-knowledge-form">
+                                    <h4>Add Context</h4>
+                                    <p>This will be used to generate answers to questions.</p>
+                                    <div className="form-group">
+                                        <label htmlFor="knowledge-title">Title:</label>
+                                        <input
+                                            id="knowledge-title"
+                                            type="text"
+                                            value={addFormData.title}
+                                            onChange={(e) => handleAddFormChange('title', e.target.value)}
+                                            placeholder="Enter title (optional)"
+                                            className="form-input"
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="knowledge-content">Content:</label>
+                                        <textarea
+                                            id="knowledge-content"
+                                            value={addFormData.content}
+                                            onChange={(e) => handleAddFormChange('content', e.target.value)}
+                                            placeholder="Enter content (optional)"
+                                            className="form-textarea"
+                                            rows={4}
+                                        />
+                                    </div>
+
+                                    <div className="form-divider">
+                                        <span>OR</span>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="knowledge-file">Upload File:</label>
+                                        <input
+                                            id="knowledge-file"
+                                            type="file"
+                                            onChange={handleFileSelect}
+                                            className="form-file-input"
+                                        />
+                                        {selectedFile && (
+                                            <div className="selected-file">
+                                                <span>Selected: {selectedFile.name}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSelectedFile(null)}
+                                                    className="remove-file-btn"
+                                                >
+                                                    <FaTimes />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="form-actions">
+                                        <button
+                                            type="button"
+                                            className="cancel-btn"
+                                            onClick={handleCancelAdd}
+                                            disabled={savingKnowledge}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="save-btn"
+                                            onClick={handleSaveKnowledge}
+                                            disabled={savingKnowledge}
+                                        >
+                                            {savingKnowledge ? <Spinner size={16} /> : 'Save'}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
