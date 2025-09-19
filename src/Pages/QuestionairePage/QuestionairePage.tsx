@@ -564,7 +564,7 @@ const QuestionairePage: React.FC<{ sessionId: string }> = ({ sessionId }) => {
                 <div className="context-popup-overlay" onClick={handleCloseContextPopup}>
                     <div className="context-popup" onClick={(e) => e.stopPropagation()}>
                         <div className="context-popup-header">
-                            <h3>Knowledge Context</h3>
+                            <h3>Knowledge Base</h3>
                             <button 
                                 className="context-close-btn"
                                 onClick={handleCloseContextPopup}
