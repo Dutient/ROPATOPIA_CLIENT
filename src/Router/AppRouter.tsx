@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../Contexts/AuthContext';
 import LoginPage from '../Pages/LoginPage/LoginPage';
 import { Layout } from '../Components';
+import RopaTemplatePage from '../Pages/RopaTemplate/RopaTemplatePage';
 
 // Protected Route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -30,6 +31,12 @@ const AppRouter: React.FC = () => {
       <Route path="/" element={
         <ProtectedRoute>
           <Layout />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/ropatemplate" element={
+        <ProtectedRoute>
+          <RopaTemplatePage />
         </ProtectedRoute>
       } />
       
