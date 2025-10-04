@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { CommonPopup, SessionsList } from "../../Components";
+import { CommonPopup } from "../../Components";
 import RopaQuestionairePage from "./Questionaire/RopaQuestionairePage";
 import PreliminaryQuestionPopup from "./Popup/PreliminaryQuestionPopup";
 import HomePage from "../HomePage/HomePage";
+import RopaSessionsList from "./Sessions/RopaSessionsList";
 
 
 const RopaTemplatePage: React.FC = () => {
@@ -23,7 +24,7 @@ const RopaTemplatePage: React.FC = () => {
 
   return (
     <div className="layout">
-      <SessionsList
+      <RopaSessionsList
         selectedSessionId={selectedSessionId}
         onSessionSelect={handleSessionSelect}
         onUploadClick={() => setShowPreliminaryQuestionPopup(true)}
