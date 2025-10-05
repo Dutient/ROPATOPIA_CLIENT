@@ -3,11 +3,12 @@ import { RopaTemplateRepository } from "../../../Repositories/RopaTemplateReposi
 import type { IPreliminaryQuestionPopupProps } from "./IPreliminaryQuestionPopupProps";
 import "./Styles.css";
 import { LoadingSpinner } from "../../../Components";
-import type { IQuestionField } from "../../../Models/IRopaTemplate";
+import type { IPreliminaryAnswer, IPreliminaryAnswerPayload, IQuestionField } from "../../../Models/IRopaTemplate";
 
 
 
-interface AnswerState {
+
+interface IAnswerState {
     [questionId: string]: string;
 }
 
@@ -17,7 +18,7 @@ const PreliminaryQuestionPopup: React.FC<IPreliminaryQuestionPopupProps> = ({
     onClose
 }) => {
     const [preliminaryQuestions, setPreliminaryQuestions] = useState<Record<string, IQuestionField>>({});
-    const [answers, setAnswers] = useState<AnswerState>({});
+    const [answers, setAnswers] = useState<IAnswerState>({});
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string>('');
     const [submitting, setSubmitting] = useState(false);
@@ -77,11 +78,25 @@ const PreliminaryQuestionPopup: React.FC<IPreliminaryQuestionPopupProps> = ({
 
         try {
             setSubmitting(true);
+            const preliminaryAnswers: IPreliminaryAnswer = {
+                domain: "",
+                jurisdiction: "",
+                organization_type: "",
+                data_types: ""
+            }
 
-            console.log(answers);
-            // Here you would typically send the answers to the server
-            // For now, we'll just call onNext with a placeholder session_id
-            const sessionId = `session_${Date.now()}`;
+            for (const key in answers) {
+                if (key in preliminaryAnswers) {
+                    (preliminaryAnswers as any)[key] = answers[key];
+                }
+            }
+
+            const payload: IPreliminaryAnswerPayload = {
+                preliminary_answers: preliminaryAnswers
+            }
+            
+            setAnswers({});
+            const sessionId = await RopaTemplateRepository.createRopaSession(payload);
             onNext(sessionId);
         } catch (err) {
             console.error('Error submitting answers:', err);

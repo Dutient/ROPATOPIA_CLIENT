@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import type { IRopaSessionsListProps } from './IRopaSessionListProps';
 import './Styles.css';
 import Swal from 'sweetalert2';
-import type { ISession } from '../../../Models/ISession';
 import { RopaTemplateRepository } from '../../../Repositories/RopaTemplateRepository';
+import type { IRopaSession } from '../../../Models/IRopaTemplate';
 
 const RopaSessionsList: React.FC<IRopaSessionsListProps> = ({
   onSessionSelect,
@@ -11,7 +11,7 @@ const RopaSessionsList: React.FC<IRopaSessionsListProps> = ({
   onUploadClick,
   refreshTrigger
 }) => {
-  const [sessions, setSessions] = useState<ISession[]>([]);
+  const [sessions, setSessions] = useState<IRopaSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -23,8 +23,7 @@ const RopaSessionsList: React.FC<IRopaSessionsListProps> = ({
     try {
       setLoading(true);
       const response = await RopaTemplateRepository.getRopaSessions();
-      const activeSession = response.filter(session => session.isActive === true);
-      setSessions(activeSession);
+      setSessions(response);
     } catch (error) {
       console.error('Failed to fetch sessions:', error);
       setSessions([]);
@@ -64,12 +63,14 @@ const RopaSessionsList: React.FC<IRopaSessionsListProps> = ({
     });
   };
 
-  const filteredSessions = (sessions).filter(session =>
-    session.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    session.processing_activities.some((activity: string) => 
-      activity.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+  const filteredSessions = (sessions).filter(session => {
+    const term = searchTerm.toLowerCase();
+    return (
+      session.domain.toLowerCase().includes(term) ||
+      session.jurisdiction.toLowerCase().includes(term) ||
+      session.status.toLowerCase().includes(term)
+    );
+  });
 
   useEffect(() => {
     fetchSessions();
@@ -101,7 +102,7 @@ const RopaSessionsList: React.FC<IRopaSessionsListProps> = ({
           </svg>
           <input
             type="text"
-            placeholder="Search by company name"
+            placeholder="Search by domain, jurisdiction, or status"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
@@ -149,23 +150,18 @@ const RopaSessionsList: React.FC<IRopaSessionsListProps> = ({
                 onClick={() => handleSessionClick(session.session_id)}
               >
                 <div className="session-content">
-                  <div className="session-title">{session.company_name}</div>
+                  <div className="session-title">{session.domain}</div>
                   <div className="session-meta">
-                    <div className="processing-activities">
-                      {session.processing_activities.length > 0 ? (
-                        session.processing_activities.slice(0, 3).map((activity: string, index: number) => (
-                          <span key={index} className="activity-tag">
-                            {activity}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="no-activities">No processing activities</span>
-                      )}
-                      {session.processing_activities.length > 3 && (
-                        <span className="more-activities">
-                          +{session.processing_activities.length - 3} more
-                        </span>
-                      )}
+                    <div className="session-details">
+                      <span className="detail-pill"><strong>Jurisdiction:</strong> {session.jurisdiction || 'N/A'}</span>
+                      <span className={`detail-pill status-pill status-${session.status.toLowerCase()}`}>{session.status}</span>
+                      <span className="detail-pill"><strong>Completion:</strong> {Math.max(0, Math.min(100, session.completion_percentage))}%</span>
+                    </div>
+                    <div className="progress-track" aria-label="Completion progress">
+                      <div
+                        className="progress-bar"
+                        style={{ width: `${Math.max(0, Math.min(100, session.completion_percentage))}%` }}
+                      />
                     </div>
                   </div>
                 </div>

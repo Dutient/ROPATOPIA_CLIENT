@@ -1,6 +1,5 @@
 import { makeApiCall } from "../Helper/RepositoryHelper";
-import type { IPreliminaryQuestions } from "../Models/IRopaTemplate";
-import type { ISession } from "../Models/ISession";
+import type { IPreliminaryAnswerPayload, IPreliminaryQuestions, IRopaSession, IRopaSessionResponse } from "../Models/IRopaTemplate";
 
 export class RopaTemplateRepository {
     
@@ -17,13 +16,30 @@ export class RopaTemplateRepository {
         }
     }
 
-    static async getRopaSessions(): Promise<ISession[]> {
+    static async createRopaSession(answer: IPreliminaryAnswerPayload): Promise<string> {
+        try {
+            const response =  await makeApiCall('/ropa/start-session', {
+                method: 'POST',
+                body: JSON.stringify(answer),
+            }, true);
+
+            const result = await response.json();
+            const session_id = result.data.session_id;
+            
+            return session_id;
+        } catch (error) {
+            console.error('Failed to create a new ROPA session:', error);
+            throw error;
+        }
+    }
+
+    static async getRopaSessions(): Promise<IRopaSession[]> {
         try {
             const response = await makeApiCall('/ropa/sessions', {
                 method: 'GET',
             }, true);
-            const result = await response.json();
-            const sessions: ISession[] = result.sessions;
+            const result: IRopaSessionResponse = await response.json();
+            const sessions: IRopaSession[] = result.data.sessions;
             return sessions;
         } catch (error) {
             console.error('Failed to get ROPA sessions:', error);
@@ -41,5 +57,7 @@ export class RopaTemplateRepository {
           console.error('Failed to delete ROPA session:', error);
           throw error;
         }
-      }
+    }
+
+    
 }
