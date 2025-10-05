@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { CommonPopup } from "../../Components";
 import RopaQuestionairePage from "./Questionaire/RopaQuestionairePage";
 import PreliminaryQuestionPopup from "./Popup/PreliminaryQuestionPopup";
 import HomePage from "../HomePage/HomePage";
 import RopaSessionsList from "./Sessions/RopaSessionsList";
-
+import "./Styles.css";
 
 const RopaTemplatePage: React.FC = () => {
   
@@ -35,16 +34,11 @@ const RopaTemplatePage: React.FC = () => {
         {selectedSessionId ? <RopaQuestionairePage sessionId={selectedSessionId} /> : <HomePage />}
       </div>
 
-      <CommonPopup
-        isOpen={showPreliminaryQuestionPopup}
-        onClose={() => setShowPreliminaryQuestionPopup(false)}
-        popupType="Create ROPA"
-        title="Create ROPA"
-      >
-        <PreliminaryQuestionPopup 
-          onNext={handlePreliminaryQuestionSelect}
-        />
-      </CommonPopup>
+      <PreliminaryQuestionPopup   
+        isOpen={showPreliminaryQuestionPopup}  
+        onClose={() => setShowPreliminaryQuestionPopup(false)}  
+        onNext={handlePreliminaryQuestionSelect}
+      />
       
     </div>
   );

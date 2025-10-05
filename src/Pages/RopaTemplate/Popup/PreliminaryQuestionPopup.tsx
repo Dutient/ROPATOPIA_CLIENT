@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { RopaTemplateRepository } from "../../../Repositories/RopaTemplateRepository";
 import type { IPreliminaryQuestionPopupProps } from "./IPreliminaryQuestionPopupProps";
 import "./Styles.css";
-import type { IQuestion } from "../../../Models/IQuestion";
 import { LoadingSpinner } from "../../../Components";
+import type { IQuestionField } from "../../../Models/IRopaTemplate";
 
 
 
@@ -12,35 +12,38 @@ interface AnswerState {
 }
 
 const PreliminaryQuestionPopup: React.FC<IPreliminaryQuestionPopupProps> = ({ 
-    onNext 
+    onNext,
+    isOpen,
+    onClose
 }) => {
-    const [preliminaryQuestions, setPreliminaryQuestions] = useState<IQuestion[]>([]);
+    const [preliminaryQuestions, setPreliminaryQuestions] = useState<Record<string, IQuestionField>>({});
     const [answers, setAnswers] = useState<AnswerState>({});
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string>('');
     const [submitting, setSubmitting] = useState(false);
 
-    const fetchPreliminaryQuestions = async () => {
-        try {
-            setIsLoading(true);
-            setError('');
-            const response = await RopaTemplateRepository.getPreliminaryQuestions();
-            
-            if (!response.ok) {
-                throw new Error('Failed to fetch preliminary questions');
-            }
-            
-            const data = await response.json();
-            setPreliminaryQuestions(data.questions || []);
-        } catch (err) {
-            console.error('Error fetching preliminary questions:', err);
-            setError('Failed to load questions. Please try again.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    
 
     useEffect(() => {
+        const fetchPreliminaryQuestions = async () => {
+            try {
+                setIsLoading(true);
+                setError('');
+                const response = await RopaTemplateRepository.getPreliminaryQuestions();
+                
+                if (!response.success) {
+                    throw new Error('Failed to fetch preliminary questions');
+                }
+                
+                setPreliminaryQuestions(response.data);
+            } catch (err) {
+                console.error('Error fetching preliminary questions:', err);
+                setError('Failed to load questions. Please try again.');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
         fetchPreliminaryQuestions();
     }, []);
 
@@ -52,10 +55,14 @@ const PreliminaryQuestionPopup: React.FC<IPreliminaryQuestionPopupProps> = ({
     };
 
     const validateAnswers = (): boolean => {
-        for (const question of preliminaryQuestions) {
-            if (!answers[question.id] || answers[question.id].trim() === '') {
-                setError(`Please answer the required question: "${question.question}"`);
-                return false;
+        for (const key in preliminaryQuestions) {
+            const field = preliminaryQuestions[key];
+            if (field.required) {
+                const value = answers[key];
+                if (!value || String(value).trim() === '') {
+                    setError(`Please answer the required question: "${field.question}"`);
+                    return false;
+                }
             }
         }
         
@@ -70,6 +77,8 @@ const PreliminaryQuestionPopup: React.FC<IPreliminaryQuestionPopupProps> = ({
 
         try {
             setSubmitting(true);
+
+            console.log(answers);
             // Here you would typically send the answers to the server
             // For now, we'll just call onNext with a placeholder session_id
             const sessionId = `session_${Date.now()}`;
@@ -82,24 +91,50 @@ const PreliminaryQuestionPopup: React.FC<IPreliminaryQuestionPopupProps> = ({
         }
     };
 
-    const renderQuestionInput = (id: string) => {
+    const renderQuestionInput = (id: string, field: IQuestionField) => {
         const value = answers[id] || '';
+        const hasOptions = Array.isArray(field.options) && field.options.length > 0;
         
+        if (!hasOptions) {
+            return (
+                <input
+                    type="text"
+                    className="question-input"
+                    value={value}
+                    onChange={(e) => handleAnswerChange(id, e.target.value)}
+                    placeholder={field.placeholder ? field.placeholder : `Enter an answer`}
+                />
+            );
+        }
+
         return (
-            <input
-                type="text"
+            <select
                 className="question-input"
                 value={value}
                 onChange={(e) => handleAnswerChange(id, e.target.value)}
-                placeholder={`Please provide your answer for this question`}
-            />
+                aria-label={`Select an option for ${id}`}
+            >
+                <option value="" disabled>{field.required ? 'Select an option (required)' : 'Select an option (optional)'}</option>
+                {field.options.map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                ))}
+            </select>
         );
     };
 
     return (
+        <>
+        {isOpen && (
         <div className="preliminary-question-popup">
             <div className="popup-container">
                 <div className="popup-header">
+                    <button 
+                        className="close-button" 
+                        onClick={onClose}
+                        aria-label="Close popup"
+                    >
+                        ×
+                    </button>
                     <h2 className="popup-title">Preliminary Questions</h2>
                     <p className="popup-subtitle">
                         Please answer the following questions to help us understand your requirements better.
@@ -112,12 +147,10 @@ const PreliminaryQuestionPopup: React.FC<IPreliminaryQuestionPopupProps> = ({
                     ) : (
                         <>
                             <div className="questions-list">
-                                {preliminaryQuestions.map((question) => (
-                                    <div key={question.id} className="question-item">
-                                        <h3 className="question-text">
-                                            {question.question}
-                                        </h3>
-                                        {renderQuestionInput(question.id)}
+                                {Object.entries(preliminaryQuestions).map(([id, field]) => (
+                                    <div key={id} className="question-item">
+                                        <p className="popup-subtitle" style={{ marginTop: '6px' }}>{field.question}</p>
+                                        {renderQuestionInput(id, field)}
                                     </div>
                                 ))}
                             </div>
@@ -131,7 +164,7 @@ const PreliminaryQuestionPopup: React.FC<IPreliminaryQuestionPopupProps> = ({
                     )}
                 </div>
 
-                {!isLoading && preliminaryQuestions.length > 0 && (
+                {!isLoading && (
                     <div className="popup-footer">
                         <button 
                             className="next-button" 
@@ -144,6 +177,8 @@ const PreliminaryQuestionPopup: React.FC<IPreliminaryQuestionPopupProps> = ({
                 )}
             </div>
         </div>
+        )}
+        </>
     );
 };
 

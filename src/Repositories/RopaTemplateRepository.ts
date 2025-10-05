@@ -1,14 +1,16 @@
 import { makeApiCall } from "../Helper/RepositoryHelper";
+import type { IPreliminaryQuestions } from "../Models/IRopaTemplate";
 import type { ISession } from "../Models/ISession";
 
 export class RopaTemplateRepository {
     
-    static async getPreliminaryQuestions(): Promise<Response> {
+    static async getPreliminaryQuestions(): Promise<IPreliminaryQuestions> {
         try {
             const response = await makeApiCall('/ropa/preliminary-questions', {
                 method: 'GET',
             }, true);
-            return response;
+            const result: IPreliminaryQuestions = await response.json();
+            return result
         } catch (error) {
             console.error('Failed to get preliminary questions:', error);
             throw error;
