@@ -3,6 +3,53 @@
 	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+.rq-metrics {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 16px;
+	margin-bottom: 16px;
+}
+
+.rq-metric-card {
+	background: #fff;
+	border: 1px solid #e5e7eb;
+	border-radius: 12px;
+	padding: 16px;
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+}
+
+.rq-metric-title {
+	color: #6b7280;
+	font-size: 0.9rem;
+	margin-bottom: 6px;
+}
+
+.rq-metric-value {
+	color: #111827;
+	font-size: 1.5rem;
+	font-weight: 700;
+}
+
+.rq-progress {
+	margin-top: 10px;
+	width: 100%;
+	height: 8px;
+	background: #f3f4f6;
+	border-radius: 9999px;
+	overflow: hidden;
+}
+
+.rq-progress-bar {
+	height: 100%;
+	background: #E86034;
+	border-radius: 9999px;
+	transition: width 0.3s ease;
+}
+
+@media (max-width: 900px) {
+	.rq-metrics { grid-template-columns: 1fr; }
+}
+
 .rq-header {
 	display: flex;
 	justify-content: space-between;

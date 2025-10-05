@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { IRopaQuestionairePageProps } from "./IRopaQuestionairePageProps";
 import { RopaTemplateRepository } from "../../../Repositories/RopaTemplateRepository";
-import type { IRopaAnswer, IRopaQuestion } from "../../../Models/IRopaTemplate";
+import type { IRopaAnswer, IRopaQuestion, IRopaSessionStatus } from "../../../Models/IRopaTemplate";
 import { LoadingSpinner } from "../../../Components";
 import "./Styles.css";
 
@@ -14,6 +14,7 @@ const RopaQuestionairePage: React.FC<IRopaQuestionairePageProps> = ({ sessionId 
 	const [currentAnswers, setCurrentAnswers] = useState<Record<string, string>>({});
 	const [changedIds, setChangedIds] = useState<Set<string>>(new Set());
 	const [saving, setSaving] = useState<boolean>(false);
+	const [status, setStatus] = useState<IRopaSessionStatus | null>(null);
 
 	const fetchQuestions = async () => {
 		try {
@@ -43,8 +44,20 @@ const RopaQuestionairePage: React.FC<IRopaQuestionairePageProps> = ({ sessionId 
 		}
 	};
 
+	const fetchStatus = async () => {
+		try {
+			const s = await RopaTemplateRepository.getSessionStatus(sessionId);
+			if (s && s.success) {
+				setStatus(s);
+			}
+		} catch (e) {
+			// ignore status errors
+		}
+	};
+
 	useEffect(() => {
 		fetchQuestions();
+		fetchStatus();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [sessionId, answeredOnly]);
 
@@ -110,7 +123,8 @@ const RopaQuestionairePage: React.FC<IRopaQuestionairePageProps> = ({ sessionId 
 			}
 			setOriginalAnswers(nextOriginals);
 			setChangedIds(new Set());
-            fetchQuestions();
+			fetchQuestions();
+			fetchStatus();
 		} catch (e) {
 			console.error("Failed to save answers", e);
 		} finally {
@@ -190,6 +204,28 @@ const RopaQuestionairePage: React.FC<IRopaQuestionairePageProps> = ({ sessionId 
 
 	return (
 		<div className="rq-page">
+			{status && status.success && (
+				<div className="rq-metrics">
+					<div className="rq-metric-card">
+						<div className="rq-metric-title">Total Questions</div>
+						<div className="rq-metric-value">{status.data.progress.total_questions}</div>
+					</div>
+					<div className="rq-metric-card">
+						<div className="rq-metric-title">Answered</div>
+						<div className="rq-metric-value">{status.data.progress.answered_questions}</div>
+						<div className="rq-progress">
+							<div
+								className="rq-progress-bar"
+								style={{ width: `${Math.max(0, Math.min(100, status.data.progress.completion_percentage))}%` }}
+							/>
+						</div>
+					</div>
+					<div className="rq-metric-card">
+						<div className="rq-metric-title">Completion</div>
+						<div className="rq-metric-value">{Math.max(0, Math.min(100, status.data.progress.completion_percentage))}%</div>
+					</div>
+				</div>
+			)}
 			<div className="rq-header">
 				<h2>ROPA Questionnaire</h2>
 				<div className="rq-controls">

@@ -93,7 +93,7 @@ export class RopaTemplateRepository {
                 session_id: session_id
             }
             
-            const response = await makeApiCall('/ropa/save-answer', {
+            const response = await makeApiCall('/ropa/session-status', {
                 method: 'POST',
                 body: JSON.stringify(payload),
             }, true);
