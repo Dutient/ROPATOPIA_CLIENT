@@ -1,5 +1,5 @@
 import { makeApiCall } from "../Helper/RepositoryHelper";
-import type { IPreliminaryAnswerPayload, IPreliminaryQuestions, IRopaSession, IRopaSessionResponse } from "../Models/IRopaTemplate";
+import type { IPreliminaryAnswerPayload, IPreliminaryQuestions, IRopaAnswer, IRopaQuestionResponse, IRopaSession, IRopaSessionResponse, IRopaSessionStatus } from "../Models/IRopaTemplate";
 
 export class RopaTemplateRepository {
     
@@ -59,5 +59,51 @@ export class RopaTemplateRepository {
         }
     }
 
+    static async getRopaQuestion(session_id: string, answered_only: boolean): Promise<IRopaQuestionResponse> {
+        try {
+            const response = await makeApiCall(`/ropa/session/${session_id}/questions?answered_only=${encodeURIComponent(answered_only)}`, {
+                method: 'GET',
+            }, true);
+
+            const result: IRopaQuestionResponse = await response.json();
+            return result;
+        } catch (error) {
+            console.error('Failed to get ropa questions:', error);
+            throw error;
+        }
+    }
+
+    static async saveAnswer(payload: IRopaAnswer): Promise<Response> {
+        try {
+            const response = await makeApiCall('/ropa/save-answer', {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            }, true);
+
+            return response;
+        } catch (error) {
+            console.error('Failed to save answer:', error);
+            throw error;
+        }
+    }
+
+    static async getSessionStatus(session_id: string): Promise<IRopaSessionStatus> {
+        try {
+            const payload = {
+                session_id: session_id
+            }
+            
+            const response = await makeApiCall('/ropa/save-answer', {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            }, true);
+
+            const result: IRopaSessionStatus = await response.json();
+            return result;
+        } catch (error) {
+            console.error('Failed to get status:', error);
+            throw error;
+        }
+    }
     
 }
