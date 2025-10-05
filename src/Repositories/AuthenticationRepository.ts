@@ -117,27 +117,4 @@ export class AuthenticationRepository {
       throw new Error('Network error. Please check your connection and try again.');
     }
   }
-
-  // Get current user
-  // static getCurrentUser(): IUser | null {
-  //   const userStr = localStorage.getItem(this.userKey);
-  //   if (userStr) {
-  //     try {
-  //       return JSON.parse(userStr);
-  //     } catch {
-  //       return null;
-  //     }
-  //   }
-  //   return null;
-  // }
-
-  // Store user data in localStorage
-  // private static storeUser(user: IUser): void {
-  //   localStorage.setItem(this.userKey, JSON.stringify(user));
-  // }
-
-  // Clear user data from localStorage
-  // private static clearUser(): void {
-  //   localStorage.removeItem(this.userKey);
-  // }
 }
