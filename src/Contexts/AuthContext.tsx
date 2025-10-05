@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, useMemo } from
 import type { ReactNode } from 'react';
 import { AuthenticationRepository } from '../Repositories/AuthenticationRepository';
 import type { IAuthState } from '../Models/IAuth';
+import isTokenExpired from '../Helper/tokenUtils';
 
 // Action types
 type AuthAction =
@@ -98,7 +99,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const initializeAuth = () => {
       const token = AuthenticationRepository.getAccessToken();
-
+      if (token && isTokenExpired(token))
+      {
+        localStorage.removeItem(token);
+        dispatch({ type: 'LOGOUT' });
+        return;
+      }
       if (token) {
         dispatch({
           type: 'LOGIN_SUCCESS',

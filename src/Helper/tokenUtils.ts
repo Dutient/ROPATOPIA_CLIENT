@@ -1,10 +1,7 @@
 import { jwtDecode } from "jwt-decode";
-import { useAuth } from '../Contexts/AuthContext';
 
-export const isTokenExpired = () => {
-    const { token } = useAuth();
+const isTokenExpired = (token: string) => {
     if(!token) return true;
-
     try {
         const decoded = jwtDecode(token);
         if(!decoded.exp) return true;
@@ -13,4 +10,6 @@ export const isTokenExpired = () => {
     } catch (error) {
         return true;
     }
-}
+};
+
+export default isTokenExpired;
