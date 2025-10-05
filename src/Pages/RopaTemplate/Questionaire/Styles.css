@@ -6,8 +6,8 @@
 .rq-metrics {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
-	gap: 16px;
-	margin-bottom: 16px;
+	gap: 20px;
+	margin-bottom: 32px;
 }
 
 .rq-metric-card {
@@ -54,11 +54,12 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 16px;
+	margin-bottom: 24px;
+	gap: 20px;
 }
 
 .rq-header h2 {
-	margin: 0;
+	margin-left: 12px;
 	color: #1f2937;
 	font-size: 1.5rem;
 	font-weight: 700;
@@ -124,7 +125,7 @@
 .rq-grid {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
-	gap: 16px;
+	gap: 20px;
 }
 
 @media (max-width: 1200px) {
@@ -136,6 +137,23 @@
 @media (max-width: 640px) {
 	.rq-grid {
 		grid-template-columns: 1fr;
+		gap: 16px;
+	}
+	
+	.rq-metrics {
+		gap: 16px;
+		margin-bottom: 24px;
+	}
+	
+	.rq-header {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 16px;
+		margin-bottom: 20px;
+	}
+	
+	.rq-controls {
+		justify-content: center;
 	}
 }
 
@@ -143,7 +161,7 @@
 	background: #fff;
 	border: 1px solid #e5e7eb;
 	border-radius: 12px;
-	padding: 16px;
+	padding: 20px;
 	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
 	transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
@@ -157,7 +175,8 @@
 .rq-qtext {
 	color: #111827;
 	font-weight: 600;
-	margin-bottom: 8px;
+	margin-bottom: 12px;
+	line-height: 1.4;
 }
 
 .rq-required {
@@ -168,7 +187,8 @@
 .rq-help {
 	color: #6b7280;
 	font-size: 0.9rem;
-	margin-bottom: 12px;
+	margin-bottom: 16px;
+	line-height: 1.5;
 }
 
 .rq-input,
@@ -184,8 +204,9 @@
 }
 
 .rq-textarea {
-	min-height: 110px;
+	min-height: 120px;
 	resize: vertical;
+	line-height: 1.5;
 }
 
 .rq-input:focus,

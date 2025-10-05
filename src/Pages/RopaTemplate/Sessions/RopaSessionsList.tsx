@@ -76,6 +76,48 @@ const RopaSessionsList: React.FC<IRopaSessionsListProps> = ({
     fetchSessions();
   }, [refreshTrigger]);
 
+  const getStatusIcon = (status: string) => {
+    const statusLower = status.toLowerCase();
+    switch (statusLower) {
+      case 'completed':
+        return (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+        );
+      case 'in_progress':
+        return (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+        );
+      case 'pending':
+        return (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+            <path d="M12 6v6l-4 2"/>
+          </svg>
+        );
+      case 'draft':
+        return (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+          </svg>
+        );
+      default:
+        return (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        );
+    }
+  };
+
   return (
     <div className="sessions-list">
       <div className="sessions-header">
@@ -150,18 +192,21 @@ const RopaSessionsList: React.FC<IRopaSessionsListProps> = ({
                 onClick={() => handleSessionClick(session.session_id)}
               >
                 <div className="session-content">
-                  <div className="session-title">{session.domain}</div>
+                  <div className="session-header">
+                    <div className="session-title">{session.domain}</div>
+                    <div className={`status-indicator status-${session.status.toLowerCase()}`}>
+                      {getStatusIcon(session.status)}
+                    </div>
+                  </div>
                   <div className="session-meta">
                     <div className="session-details">
-                      <span className="detail-pill"><strong>Jurisdiction:</strong> {session.jurisdiction || 'N/A'}</span>
-                      <span className={`detail-pill status-pill status-${session.status.toLowerCase()}`}>{session.status}</span>
-                      <span className="detail-pill"><strong>Completion:</strong> {Math.max(0, Math.min(100, session.completion_percentage))}%</span>
-                    </div>
-                    <div className="progress-track" aria-label="Completion progress">
-                      <div
-                        className="progress-bar"
-                        style={{ width: `${Math.max(0, Math.min(100, session.completion_percentage))}%` }}
-                      />
+                      <span className="detail-item">
+                        <span className="detail-label">Jurisdiction:</span>
+                        <span className="detail-value">{session.jurisdiction || 'N/A'}</span>
+                      </span>
+                      <span className={`status-badge status-${session.status.toLowerCase()}`}>
+                        {session.status}
+                      </span>
                     </div>
                   </div>
                 </div>
