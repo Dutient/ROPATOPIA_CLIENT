@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Contexts/AuthContext';
-import { FaSignOutAlt } from 'react-icons/fa'; // Import logout icon
+import { FaSignOutAlt, FaFileAlt } from 'react-icons/fa'; // Import logout and document icons
 import './Styles.css';
 
 const Navbar: React.FC = () => {
@@ -25,6 +25,14 @@ const Navbar: React.FC = () => {
           <Link to="/">
             <h1>ROPATOPIA</h1>
           </Link>
+        </div>
+
+        {/* Navigation Links */}
+        <div className="navbar-links">
+          <a href="/ropatemplate" target="_blank" rel="noopener noreferrer" className="nav-link">
+            <FaFileAlt className="nav-icon" />
+            ROPA Template
+          </a>
         </div>
 
         {/* Auth Section */}

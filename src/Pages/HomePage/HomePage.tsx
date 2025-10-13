@@ -3,6 +3,10 @@ import './Styles.css';
 
 const HomePage: React.FC = () => {
   
+  const handleRedirectToRopaTemplate = () => {
+    window.open('/ropatemplate', '_blank');
+  };
+
   return (
     <>
       <div className="homepage">
@@ -16,6 +20,16 @@ const HomePage: React.FC = () => {
             <p className="hero-subtitle">
               Your AI-powered platform for intelligent content generation and analysis
             </p>
+
+            <div className="hero-buttons">
+              <button 
+                className="cta-button secondary" 
+                onClick={handleRedirectToRopaTemplate}
+              >
+                Go to ROPA Template
+                <span className="triangle-arrow"></span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

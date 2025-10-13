@@ -18,6 +18,18 @@
   min-height: 70px;
 }
 
+.navbar-container > * {
+  flex: 1;
+}
+
+.navbar-container > .navbar-links {
+  justify-content: center;
+}
+
+.navbar-container > .navbar-auth {
+  justify-content: flex-end;
+}
+
 /* Brand/Logo */
 .navbar-brand h1 {
   color: white;
@@ -42,6 +54,11 @@
   display: flex;
   align-items: center;
   gap: 30px;
+}
+
+.nav-icon {
+  margin-right: 8px;
+  font-size: 1rem;
 }
 
 .nav-link {
@@ -195,7 +212,7 @@
     top: 100%;
     left: 0;
     right: 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #E86034;
     flex-direction: column;
     padding: 20px 0;
     gap: 15px;

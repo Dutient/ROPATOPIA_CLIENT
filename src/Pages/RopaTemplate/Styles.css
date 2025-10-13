@@ -1,0 +1,133 @@
+/* Layout Component Styles */
+
+.layout {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .main-content {
+    flex: 1;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: transparent;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    width: calc(100% - 320px);
+    position: relative;
+    overflow-x: hidden;
+  }
+  
+  .main-content.with-sidebar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px 16px 16px 16px;
+    margin: 12px 12px 12px 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    min-height: calc(100vh - 24px);
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .layout {
+      flex-direction: column;
+    }
+    
+    .main-content {
+      margin: 0;
+      width: 100%;
+      min-height: 100vh;
+    }
+    
+    .main-content.with-sidebar {
+      margin: 8px;
+      width: calc(100% - 16px);
+      border-radius: 12px;
+      min-height: calc(100vh - 16px);
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .main-content.with-sidebar {
+      margin: 4px;
+      width: calc(100% - 8px);
+      border-radius: 8px;
+      min-height: calc(100vh - 8px);
+    }
+  }
+  
+  /* Ensure proper spacing for content */
+  .main-content > * {
+    flex: 1;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    overflow: hidden;
+  }
+  
+  /* Content wrapper styling */
+  .main-content.with-sidebar > * {
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Add subtle animation for content loading */
+  .main-content.with-sidebar > * {
+    animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Dark mode support */
+  @media (prefers-color-scheme: dark) {
+    .layout {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+    
+    .main-content {
+      background: transparent;
+    }
+    
+    .main-content.with-sidebar {
+      background: rgba(15, 23, 42, 0.95);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  }
+  
+  /* Focus and accessibility improvements */
+  .main-content:focus-within {
+    outline: none;
+  }
+  
+  /* Smooth scrollbar styling */
+  .main-content::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .main-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .main-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+  
+  .main-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+  
+  
