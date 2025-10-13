@@ -2,10 +2,6 @@ import React from 'react';
 import './Styles.css';
 
 const HomePage: React.FC = () => {
-  
-  const handleRedirectToRopaTemplate = () => {
-    window.open('/ropatemplate', '_blank');
-  };
 
   return (
     <>
