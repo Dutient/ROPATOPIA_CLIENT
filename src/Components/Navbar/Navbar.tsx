@@ -23,15 +23,23 @@ const Navbar: React.FC = () => {
         {/* Logo/Brand */}
         <div className="navbar-brand">
           <Link to="/">
-            <h1>ROPATOPIA</h1>
+            <h1>DUTIENT</h1>
           </Link>
         </div>
 
         {/* Navigation Links */}
         <div className="navbar-links">
+          <a href="/" target="_blank" rel="noopener noreferrer" className="nav-link">
+            <FaFileAlt className="nav-icon" />
+            PIA AGENT
+          </a>
+        </div>
+        
+        {/* Navigation Links */}
+        <div className="navbar-links">
           <a href="/ropatemplate" target="_blank" rel="noopener noreferrer" className="nav-link">
             <FaFileAlt className="nav-icon" />
-            ROPA Template
+            ROPA AGENT
           </a>
         </div>
 

@@ -14,22 +14,12 @@ const HomePage: React.FC = () => {
           <div className="hero-content">
             <h1 className="hero-title">Welcome to
               <br className="hero-break" />
-              <span className="hero-title2">ROPAtoPIA</span>
+              <span className="hero-title2">DUTIENT</span>
             </h1>
 
             <p className="hero-subtitle">
               Your AI-powered platform for intelligent content generation and analysis
             </p>
-
-            <div className="hero-buttons">
-              <button 
-                className="cta-button secondary" 
-                onClick={handleRedirectToRopaTemplate}
-              >
-                Go to ROPA Template
-                <span className="triangle-arrow"></span>
-              </button>
-            </div>
           </div>
         </div>
       </div>
