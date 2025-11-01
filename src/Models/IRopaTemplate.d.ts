@@ -17,6 +17,8 @@ export interface IRopaSession {
     status: string;
     domain: string;
     jurisdiction: string;
+    processing_activity: string;
+    company_name: string;
     completion_percentage: number;
     created_at: string;
     updated_at: string;
