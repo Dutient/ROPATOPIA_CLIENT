@@ -36,7 +36,32 @@ const PreliminaryQuestionPopup: React.FC<IPreliminaryQuestionPopupProps> = ({
                     throw new Error('Failed to fetch preliminary questions');
                 }
                 
-                setPreliminaryQuestions(response.data);
+                const additionalFields: Record<string, IQuestionField> = {
+                    processing_activity: {
+                        question: "Processing Activity",
+                        type: "text",
+                        options: [],
+                        required: true,
+                        placeholder: "Enter the processing activity"
+                    },
+                    company_name: {
+                        question: "Company Name",
+                        type: "text",
+                        options: [],
+                        required: true,
+                        placeholder: "Enter the company name"
+                    }
+                };
+
+                const mergedQuestions: Record<string, IQuestionField> = { ...response.data };
+
+                Object.entries(additionalFields).forEach(([key, field]) => {
+                    if (!mergedQuestions[key]) {
+                        mergedQuestions[key] = field;
+                    }
+                });
+
+                setPreliminaryQuestions(mergedQuestions);
             } catch (err) {
                 console.error('Error fetching preliminary questions:', err);
                 setError('Failed to load questions. Please try again.');
@@ -82,7 +107,9 @@ const PreliminaryQuestionPopup: React.FC<IPreliminaryQuestionPopupProps> = ({
                 domain: "",
                 jurisdiction: "",
                 organization_type: "",
-                data_types: ""
+                data_types: "",
+                processing_activity: "",
+                company_name: ""
             }
 
             for (const key in answers) {
@@ -169,6 +196,7 @@ const PreliminaryQuestionPopup: React.FC<IPreliminaryQuestionPopupProps> = ({
                                     </div>
                                 ))}
                             </div>
+                            
                             
                             {error && (
                                 <div className="error-message">

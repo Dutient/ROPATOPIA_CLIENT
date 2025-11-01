@@ -35,6 +35,8 @@ export interface IPreliminaryAnswer {
     jurisdiction: string;
     organization_type: string;
     data_types: string;
+    processing_activity: string;
+    company_name: string;
 }
 
 export interface IPreliminaryAnswerPayload {
