@@ -1,5 +1,5 @@
 import { makeApiCall } from "../Helper/RepositoryHelper";
-import type { IPreliminaryAnswerPayload, IPreliminaryQuestions, IRopaAnswer, IRopaQuestionResponse, IRopaSession, IRopaSessionResponse, IRopaSessionStatus } from "../Models/IRopaTemplate";
+import type { IPreliminaryAnswerPayload, IPreliminaryQuestions, IRopaAddQuestionPayload, IRopaAnswer, IRopaQuestionResponse, IRopaSession, IRopaSessionResponse, IRopaSessionStatus } from "../Models/IRopaTemplate";
 
 export class RopaTemplateRepository {
     
@@ -102,6 +102,55 @@ export class RopaTemplateRepository {
             return result;
         } catch (error) {
             console.error('Failed to get status:', error);
+            throw error;
+        }
+    }
+
+    static async removeRopaQuestion(question_id: string, session_id: string): Promise<Response> {
+        try {
+            const payload = {
+                session_id: session_id,
+                question_id: question_id  
+            }
+            const response = await makeApiCall(`/ropa/remove-question`, {
+                method: 'DELETE',
+                body: JSON.stringify(payload),
+            }, true);
+            return response;
+        } catch (error) {
+            console.error('Failed to remove ROPA question:', error);
+            throw error;
+        }
+    }
+
+    static async generateROPA( session_id: string): Promise<Response> {
+        try {
+            const payload = {
+                session_id: session_id,
+                format_type: "json"
+            }
+            const response = await makeApiCall('/ropa/generate-document', {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            }, true);
+
+            return response;
+        } catch (error) {
+            console.error('Failed to export ROPA session:', error);
+            throw error;
+        }
+    }
+
+    static async addRopaQuestion(payload: IRopaAddQuestionPayload): Promise<Response> {
+        try {
+            const response = await makeApiCall('/ropa/add-question', {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            }, true);
+
+            return response;
+        } catch (error) {
+            console.error('Failed to add ROPA question:', error);
             throw error;
         }
     }

@@ -193,7 +193,7 @@ const RopaSessionsList: React.FC<IRopaSessionsListProps> = ({
               >
                 <div className="session-content">
                   <div className="session-header">
-                    <div className="session-title">{session.domain}</div>
+                    <div className="session-title">{session.company_name}</div>
                     <div className={`status-indicator status-${session.status.toLowerCase()}`}>
                       {getStatusIcon(session.status)}
                     </div>
@@ -202,7 +202,7 @@ const RopaSessionsList: React.FC<IRopaSessionsListProps> = ({
                     <div className="session-details">
                       <span className="detail-item">
                         <span className="detail-label">Jurisdiction:</span>
-                        <span className="detail-value">{session.jurisdiction || 'N/A'}</span>
+                        <span className="detail-value">{session.processing_activity || 'N/A'}</span>
                       </span>
                       <span className={`status-badge status-${session.status.toLowerCase()}`}>
                         {session.status}

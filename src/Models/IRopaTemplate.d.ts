@@ -17,6 +17,8 @@ export interface IRopaSession {
     status: string;
     domain: string;
     jurisdiction: string;
+    processing_activity: string;
+    company_name: string;
     completion_percentage: number;
     created_at: string;
     updated_at: string;
@@ -35,6 +37,8 @@ export interface IPreliminaryAnswer {
     jurisdiction: string;
     organization_type: string;
     data_types: string;
+    processing_activity: string;
+    company_name: string;
 }
 
 export interface IPreliminaryAnswerPayload {
@@ -72,6 +76,16 @@ export interface IRopaAnswer {
     other_text: string | null,
     answer: string,
     category: string,
+}
+
+export interface IRopaAddQuestionPayload {
+    session_id: string;
+    question: string;
+    question_type: string;
+    category: string;
+    help_text: string;
+    required: boolean;
+    options: string[];
 }
 
 export interface IRopaSessionStatus {

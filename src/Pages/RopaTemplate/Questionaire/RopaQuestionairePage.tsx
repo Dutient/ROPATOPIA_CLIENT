@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import type { IRopaQuestionairePageProps } from "./IRopaQuestionairePageProps";
 import { RopaTemplateRepository } from "../../../Repositories/RopaTemplateRepository";
-import type { IRopaAnswer, IRopaQuestion, IRopaSessionStatus } from "../../../Models/IRopaTemplate";
+import type { IRopaAddQuestionPayload, IRopaAnswer, IRopaQuestion, IRopaSessionStatus } from "../../../Models/IRopaTemplate";
 import { LoadingSpinner } from "../../../Components";
 import "./Styles.css";
+import { FaPlus } from "react-icons/fa";
 
 const RopaQuestionairePage: React.FC<IRopaQuestionairePageProps> = ({ sessionId }) => {
 	const [questions, setQuestions] = useState<IRopaQuestion[]>([]);
@@ -15,6 +16,18 @@ const RopaQuestionairePage: React.FC<IRopaQuestionairePageProps> = ({ sessionId 
 	const [changedIds, setChangedIds] = useState<Set<string>>(new Set());
 	const [saving, setSaving] = useState<boolean>(false);
 	const [status, setStatus] = useState<IRopaSessionStatus | null>(null);
+	const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
+	const [showAddQuestionPopup, setShowAddQuestionPopup] = useState<boolean>(false);
+	const [addingQuestion, setAddingQuestion] = useState<boolean>(false);
+	const [addQuestionError, setAddQuestionError] = useState<string>("");
+	const [addQuestionForm, setAddQuestionForm] = useState({
+		question: "",
+		question_type: "text",
+		category: "",
+		help_text: "",
+		required: false,
+		optionsText: ""
+	});
 
 	const fetchQuestions = async () => {
 		try {
@@ -63,6 +76,85 @@ const RopaQuestionairePage: React.FC<IRopaQuestionairePageProps> = ({ sessionId 
 
 	const handleToggleAnswered = () => {
 		setAnsweredOnly(prev => !prev);
+	};
+
+	const resetAddQuestionForm = () => {
+		setAddQuestionForm({
+			question: "",
+			question_type: "text",
+			category: "",
+			help_text: "",
+			required: false,
+			optionsText: ""
+		});
+		setAddQuestionError("");
+	};
+
+	const handleOpenAddQuestion = () => {
+		resetAddQuestionForm();
+		setShowAddQuestionPopup(true);
+	};
+
+	const handleCloseAddQuestion = () => {
+		setShowAddQuestionPopup(false);
+	};
+
+	const handleAddQuestionChange = (field: "question" | "question_type" | "category" | "help_text" | "required" | "optionsText", value: string | boolean) => {
+		setAddQuestionForm(prev => ({
+			...prev,
+			[field]: value
+		}));
+	};
+
+	const parseOptions = (optionsText: string): string[] => {
+		return optionsText
+			.split(/\r?\n|,/)
+			.map(opt => opt.trim())
+			.filter(opt => opt.length > 0);
+	};
+
+	const handleSubmitAddQuestion = async () => {
+		const trimmedQuestion = addQuestionForm.question.trim();
+		const trimmedCategory = addQuestionForm.category.trim();
+		const trimmedHelpText = addQuestionForm.help_text.trim();
+		if (!trimmedQuestion) {
+			setAddQuestionError("Question text is required.");
+			return;
+		}
+		if (!trimmedCategory) {
+			setAddQuestionError("Category is required.");
+			return;
+		}
+		let options: string[] = [];
+		if (addQuestionForm.question_type === "multi_select") {
+			options = parseOptions(addQuestionForm.optionsText);
+			if (options.length === 0) {
+				setAddQuestionError("Provide at least one option for multi select questions.");
+				return;
+			}
+		}
+		const payload: IRopaAddQuestionPayload = {
+			session_id: sessionId,
+			question: trimmedQuestion,
+			question_type: addQuestionForm.question_type,
+			category: trimmedCategory,
+			help_text: trimmedHelpText,
+			required: addQuestionForm.required,
+			options
+		};
+		try {
+			setAddingQuestion(true);
+			setAddQuestionError("");
+			await RopaTemplateRepository.addRopaQuestion(payload);
+			setShowAddQuestionPopup(false);
+			resetAddQuestionForm();
+			fetchQuestions();
+			fetchStatus();
+		} catch (e: any) {
+			setAddQuestionError(e?.message || "Failed to add question. Please try again.");
+		} finally {
+			setAddingQuestion(false);
+		}
 	};
 
 	const markChangeIfNeeded = (id: string, nextValue: string) => {
@@ -129,6 +221,44 @@ const RopaQuestionairePage: React.FC<IRopaQuestionairePageProps> = ({ sessionId 
 			console.error("Failed to save answers", e);
 		} finally {
 			setSaving(false);
+		}
+	};
+
+	const handleRemoveQuestion = async (questionId: string) => {
+		try {
+			setRemovingIds(prev => {
+				const next = new Set(prev);
+				next.add(questionId);
+				return next;
+			});
+			await RopaTemplateRepository.removeRopaQuestion(questionId, sessionId);
+			setQuestions(prev => prev.filter(q => q.id !== questionId));
+			setOriginalAnswers(prev => {
+				const next = { ...prev };
+				delete next[questionId];
+				return next;
+			});
+			setCurrentAnswers(prev => {
+				const next = { ...prev };
+				delete next[questionId];
+				return next;
+			});
+			setChangedIds(prev => {
+				const next = new Set(prev);
+				next.delete(questionId);
+				return next;
+			});
+			setError("");
+			fetchStatus();
+		} catch (e: any) {
+			console.error("Failed to remove question", e);
+			setError(e?.message || "Failed to remove question");
+		} finally {
+			setRemovingIds(prev => {
+				const next = new Set(prev);
+				next.delete(questionId);
+				return next;
+			});
 		}
 	};
 
@@ -228,20 +358,29 @@ const RopaQuestionairePage: React.FC<IRopaQuestionairePageProps> = ({ sessionId 
 			)}
 			<div className="rq-header">
 				<h2>ROPA Questionnaire</h2>
-				<div className="rq-controls">
-					<button className={`rq-toggle-btn ${!answeredOnly ? "active" : ""}`} onClick={handleToggleAnswered} disabled={loading}>
-						Unanswered
-					</button>
-					<button className={`rq-toggle-btn ${answeredOnly ? "active" : ""}`} onClick={handleToggleAnswered} disabled={loading}>
-						Answered
-					</button>
-					<button className="rq-save" onClick={handleSave} disabled={saving || changedIds.size === 0}>
-						{saving ? "Saving..." : `Save (${changedIds.size})`}
-					</button>
-				</div>
+		<div className="rq-controls">
+			<button
+				type="button"
+				className="rq-add-btn"
+				onClick={handleOpenAddQuestion}
+				title="Add question"
+				aria-label="Add question"
+			>
+				<FaPlus />
+			</button>
+			<button className={`rq-toggle-btn ${!answeredOnly ? "active" : ""}`} onClick={handleToggleAnswered} disabled={loading}>
+				Unanswered
+			</button>
+			<button className={`rq-toggle-btn ${answeredOnly ? "active" : ""}`} onClick={handleToggleAnswered} disabled={loading}>
+				Answered
+			</button>
+			<button className="rq-save" onClick={handleSave} disabled={saving || changedIds.size === 0}>
+				{saving ? "Saving..." : `Save (${changedIds.size})`}
+			</button>
+		</div>
 			</div>
 
-			{loading ? (
+		{loading ? (
 				<div className="rq-loading"><LoadingSpinner /></div>
 			) : error ? (
 				<div className="rq-error">{error}</div>
@@ -249,7 +388,16 @@ const RopaQuestionairePage: React.FC<IRopaQuestionairePageProps> = ({ sessionId 
 				<div className="rq-grid">
 					{questions.map((q) => {
 						return (
-							<div key={q.id} className="rq-card">
+						<div key={q.id} className="rq-card">
+							<button
+								type="button"
+								className="rq-remove-btn"
+								onClick={() => handleRemoveQuestion(q.id)}
+								disabled={removingIds.has(q.id)}
+								aria-label="Remove question"
+							>
+								×
+							</button>
 								<div className="rq-qtext">{q.question}{q.required ? <span className="rq-required"> *</span> : null}</div>
 								{q.help_text ? <div className="rq-help">{q.help_text}</div> : null}
 								{renderInput(q)}
@@ -257,7 +405,103 @@ const RopaQuestionairePage: React.FC<IRopaQuestionairePageProps> = ({ sessionId 
 						);
 					})}
 				</div>
-			)}
+		)}
+
+		{showAddQuestionPopup && (
+			<div className="rq-add-popup-overlay" onClick={handleCloseAddQuestion}>
+				<div className="rq-add-popup" onClick={(e) => e.stopPropagation()}>
+					<div className="rq-add-popup-header">
+						<h3>Add Question</h3>
+						<button
+							type="button"
+							className="rq-add-close"
+							onClick={handleCloseAddQuestion}
+							aria-label="Close add question popup"
+						>
+							×
+						</button>
+					</div>
+					<div className="rq-add-popup-content">
+						<div className="rq-add-field">
+							<label htmlFor="rq-add-question">Question<span className="rq-required"> *</span></label>
+							<input
+								id="rq-add-question"
+								type="text"
+								value={addQuestionForm.question}
+								onChange={(e) => handleAddQuestionChange("question", e.target.value)}
+								placeholder="Enter question"
+							/>
+						</div>
+						<div className="rq-add-field">
+							<label htmlFor="rq-add-category">Category<span className="rq-required"> *</span></label>
+							<input
+								id="rq-add-category"
+								type="text"
+								value={addQuestionForm.category}
+								onChange={(e) => handleAddQuestionChange("category", e.target.value)}
+								placeholder="Enter category"
+							/>
+						</div>
+						<div className="rq-add-field">
+							<label htmlFor="rq-add-type">Question Type</label>
+							<select
+								id="rq-add-type"
+								value={addQuestionForm.question_type}
+								onChange={(e) => handleAddQuestionChange("question_type", e.target.value)}
+							>
+								<option value="text">Text</option>
+								<option value="textarea">Textarea</option>
+								<option value="boolean">Boolean</option>
+								<option value="multi_select">Multi Select</option>
+							</select>
+						</div>
+						{addQuestionForm.question_type === "multi_select" && (
+							<div className="rq-add-field">
+								<label htmlFor="rq-add-options">Options<span className="rq-required"> *</span></label>
+								<textarea
+									id="rq-add-options"
+									rows={4}
+									value={addQuestionForm.optionsText}
+									onChange={(e) => handleAddQuestionChange("optionsText", e.target.value)}
+									placeholder="Enter each option on a new line or comma separated"
+								/>
+							</div>
+						)}
+						<div className="rq-add-field">
+							<label htmlFor="rq-add-help">Help Text</label>
+							<textarea
+								id="rq-add-help"
+								rows={3}
+								value={addQuestionForm.help_text}
+								onChange={(e) => handleAddQuestionChange("help_text", e.target.value)}
+								placeholder="Optional help text"
+							/>
+						</div>
+						<div className="rq-add-field-checkbox">
+							<label>
+								<input
+									type="checkbox"
+									checked={addQuestionForm.required}
+									onChange={(e) => handleAddQuestionChange("required", e.target.checked)}
+								/>
+								<span>Required question</span>
+							</label>
+						</div>
+					</div>
+					{addQuestionError && (
+						<div className="rq-add-error">{addQuestionError}</div>
+					)}
+					<div className="rq-add-actions">
+						<button type="button" className="rq-add-cancel" onClick={handleCloseAddQuestion} disabled={addingQuestion}>
+							Cancel
+						</button>
+						<button type="button" className="rq-add-submit" onClick={handleSubmitAddQuestion} disabled={addingQuestion}>
+							{addingQuestion ? "Adding..." : "Add Question"}
+						</button>
+					</div>
+				</div>
+			</div>
+		)}
 		</div>
 	);
 };
