@@ -74,6 +74,16 @@ export interface IRopaAnswer {
     category: string,
 }
 
+export interface IRopaAddQuestionPayload {
+    session_id: string;
+    question: string;
+    question_type: string;
+    category: string;
+    help_text: string;
+    required: boolean;
+    options: string[];
+}
+
 export interface IRopaSessionStatus {
     success: boolean,
     message: string,

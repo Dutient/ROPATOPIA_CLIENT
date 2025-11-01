@@ -15,6 +15,7 @@ const RopaQuestionairePage: React.FC<IRopaQuestionairePageProps> = ({ sessionId 
 	const [changedIds, setChangedIds] = useState<Set<string>>(new Set());
 	const [saving, setSaving] = useState<boolean>(false);
 	const [status, setStatus] = useState<IRopaSessionStatus | null>(null);
+	const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
 
 	const fetchQuestions = async () => {
 		try {
@@ -129,6 +130,44 @@ const RopaQuestionairePage: React.FC<IRopaQuestionairePageProps> = ({ sessionId 
 			console.error("Failed to save answers", e);
 		} finally {
 			setSaving(false);
+		}
+	};
+
+	const handleRemoveQuestion = async (questionId: string) => {
+		try {
+			setRemovingIds(prev => {
+				const next = new Set(prev);
+				next.add(questionId);
+				return next;
+			});
+			await RopaTemplateRepository.removeRopaQuestion(questionId, sessionId);
+			setQuestions(prev => prev.filter(q => q.id !== questionId));
+			setOriginalAnswers(prev => {
+				const next = { ...prev };
+				delete next[questionId];
+				return next;
+			});
+			setCurrentAnswers(prev => {
+				const next = { ...prev };
+				delete next[questionId];
+				return next;
+			});
+			setChangedIds(prev => {
+				const next = new Set(prev);
+				next.delete(questionId);
+				return next;
+			});
+			setError("");
+			fetchStatus();
+		} catch (e: any) {
+			console.error("Failed to remove question", e);
+			setError(e?.message || "Failed to remove question");
+		} finally {
+			setRemovingIds(prev => {
+				const next = new Set(prev);
+				next.delete(questionId);
+				return next;
+			});
 		}
 	};
 
@@ -249,7 +288,16 @@ const RopaQuestionairePage: React.FC<IRopaQuestionairePageProps> = ({ sessionId 
 				<div className="rq-grid">
 					{questions.map((q) => {
 						return (
-							<div key={q.id} className="rq-card">
+						<div key={q.id} className="rq-card">
+							<button
+								type="button"
+								className="rq-remove-btn"
+								onClick={() => handleRemoveQuestion(q.id)}
+								disabled={removingIds.has(q.id)}
+								aria-label="Remove question"
+							>
+								×
+							</button>
 								<div className="rq-qtext">{q.question}{q.required ? <span className="rq-required"> *</span> : null}</div>
 								{q.help_text ? <div className="rq-help">{q.help_text}</div> : null}
 								{renderInput(q)}
